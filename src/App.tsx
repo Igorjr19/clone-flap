@@ -1,20 +1,18 @@
-import { Link } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import './App.css';
+import Header from './components/header/header';
+import Home from './pages/home/home';
+import Regex from './pages/Regex';
 
 function App() {
   return (
-    <>
-      <div>
-        <ul>
-          <li>
-            <Link to="/">Home</Link>
-          </li>
-          <li>
-            <Link to="/regex">Regex</Link>
-          </li>
-        </ul>
-      </div>
-    </>
+    <BrowserRouter>
+      <Header />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/regex" element={<Regex />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
