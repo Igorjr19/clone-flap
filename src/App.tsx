@@ -2,7 +2,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import './App.css';
 import Header from './components/header/header';
 import Home from './pages/home/home';
-import Regex from './pages/Regex';
+import Regex from './pages/regex/regex';
 
 function App() {
   return (
