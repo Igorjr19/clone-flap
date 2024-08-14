@@ -1,19 +1,10 @@
-import { Link } from 'react-router-dom';
 import './App.css';
+import Menu from './components/menu/menu';
 
 function App() {
   return (
     <>
-      <div>
-        <ul>
-          <li>
-            <Link to="/">Home</Link>
-          </li>
-          <li>
-            <Link to="/regex">Regex</Link>
-          </li>
-        </ul>
-      </div>
+      <Menu />
     </>
   );
 }
