@@ -16,7 +16,6 @@
     "react-bootstrap": "^2.10.4",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.0",
-    "styled-components": "^6.1.12",
     "tokenizr": "^1.7.0"
   },
   "devDependencies": {

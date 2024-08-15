@@ -1,15 +1,21 @@
-import { Container, Nav, Navbar } from 'react-bootstrap';
+import { Container, Nav, Navbar, Row } from 'react-bootstrap';
 
 function Header() {
   return (
-    <Navbar bg="dark" data-bs-theme="dark">
-      <Container>
-        <Navbar.Brand href="/">Home</Navbar.Brand>
-        <Nav className="me-auto">
-          <Nav.Link href="/regex">Regex</Nav.Link>
-        </Nav>
-      </Container>
-    </Navbar>
+    <Container fluid>
+      <Row>
+        <Navbar>
+          <Nav fill defaultActiveKey={'/'} activeKey={window.location.pathname}>
+            <Nav.Item className="ms-3">
+              <Nav.Link href="/">Home</Nav.Link>
+            </Nav.Item>
+            <Nav.Item>
+              <Nav.Link href="/regex">Regex</Nav.Link>
+            </Nav.Item>
+          </Nav>
+        </Navbar>
+      </Row>
+    </Container>
   );
 }
 

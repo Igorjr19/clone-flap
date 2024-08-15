@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Container, Form, InputGroup } from 'react-bootstrap';
+import { Form, InputGroup, Stack } from 'react-bootstrap';
 import { checkRegex } from '../../util/regex/regex';
 
 function Regex() {
@@ -28,17 +28,19 @@ function Regex() {
     };
 
   return (
-    <>
-      <Container>
+    <Stack gap={0}>
+      <div className="p-2">
         <InputGroup className="mb-3">
           <InputGroup.Text>Expressão Regular</InputGroup.Text>
           <Form.Control
             type="text"
-            placeholder="Expressão Regular"
+            placeholder="Exemplo: ^[A-Za-z0-9]+$"
             value={regex}
             onChange={onChangeRegex}
           />
         </InputGroup>
+      </div>
+      <div className="p-2">
         <InputGroup className="mb-3">
           <InputGroup.Text>Texto 1</InputGroup.Text>
           <Form.Control
@@ -55,6 +57,8 @@ function Regex() {
             }}
           />
         </InputGroup>
+      </div>
+      <div className="p-2">
         <InputGroup className="mb-3">
           <InputGroup.Text>Texto 2</InputGroup.Text>
           <Form.Control
@@ -71,8 +75,8 @@ function Regex() {
             }}
           />
         </InputGroup>
-      </Container>
-    </>
+      </div>
+    </Stack>
   );
 }
 
