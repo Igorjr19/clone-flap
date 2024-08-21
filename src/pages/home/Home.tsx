@@ -12,7 +12,7 @@ function Home() {
       <br />
       <h2 className="display-3 text-center">Autores:</h2>
       {authorsJson.authors.map((author) => (
-        <h3 className="display-4 text-center" key={author.name}>
+        <h3 className="display-5 text-center" key={author.name}>
           {author.name}
         </h3>
       ))}
