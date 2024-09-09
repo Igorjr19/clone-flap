@@ -12,6 +12,9 @@ function Header() {
             <Nav.Item>
               <Nav.Link href="/regex">Regex</Nav.Link>
             </Nav.Item>
+            <Nav.Item>
+              <Nav.Link href="/regular-grammar">Gramática Regular</Nav.Link>
+            </Nav.Item>
           </Nav>
         </Navbar>
       </Row>
