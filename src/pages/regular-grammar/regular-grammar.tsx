@@ -1,7 +1,11 @@
-import { faCirclePlus, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
+import {
+  faArrowRight,
+  faCirclePlus,
+  faXmarkCircle,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useState } from 'react';
-import { Button, Col, Container, Form, Row } from 'react-bootstrap';
+import { Button, Container, Form } from 'react-bootstrap';
 
 interface Rule {
   left: string;
@@ -225,143 +229,134 @@ function RegularGrammar() {
 
   return (
     <Container>
-      <Row>
-        <Col>
-          <Button variant="outline-danger" onClick={clearRules}>
-            Reset
-          </Button>
-        </Col>
-        <Col>
-          <Button variant="outline-success" onClick={handleExample}>
-            Exemplo
-          </Button>
-        </Col>
-      </Row>
-      <Row>
-        <Col>
+      <h1>Gramática Regular</h1>
+      <Container style={{ padding: '1vh 0', display: 'flex', gap: '1vw' }}>
+        <Button
+          style={{
+            width: '5vw',
+          }}
+          variant="outline-danger"
+          onClick={clearRules}
+        >
+          Reset
+        </Button>
+        <Button variant="outline-success" onClick={handleExample}>
+          Exemplo
+        </Button>
+      </Container>
+      {rules.map((rule, leftIndex) => (
+        <Container
+          key={leftIndex}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '1vh 0',
+            gap: '1vw',
+          }}
+        >
           <Form.Control
+            style={{ width: '5vw', textAlign: 'center' }}
             type="text"
-            placeholder={startSymbol}
-            disabled
-          ></Form.Control>
-        </Col>
-        <Col>
-          <Form.Text className="text-muted">→</Form.Text>
-        </Col>
-        {rules[0] &&
-          rules[0].right.map((right, rightIndex) => (
-            <Col key={rightIndex}>
-              <Form.Control
-                id={`input:${0}:${rightIndex}`}
-                type="text"
-                placeholder="ε"
-                value={right}
-                onKeyDown={handleRuleInputKeyDown(
-                  0,
-                  rightIndex,
-                  rules[0].left,
-                  right,
-                )}
-                onChange={handleRuleOnChange(0, rightIndex)}
-              ></Form.Control>
-            </Col>
+            placeholder=""
+            value={rule.left}
+            onChange={handleRuleOnChange(leftIndex, -1)}
+            onKeyDown={handleRuleInputKeyDown(
+              leftIndex,
+              -1,
+              rule.left,
+              rule.right[0],
+            )}
+            id={`input:${leftIndex}:-1`}
+            disabled={leftIndex === 0}
+          />
+          <FontAwesomeIcon icon={faArrowRight} />
+          {rule.right.map((right, rightIndex) => (
+            <Form.Control
+              style={{ maxWidth: '10vw' }}
+              type="text"
+              placeholder="ε"
+              value={right}
+              onChange={handleRuleOnChange(leftIndex, rightIndex)}
+              onKeyDown={handleRuleInputKeyDown(
+                leftIndex,
+                rightIndex,
+                rule.left,
+                right,
+              )}
+              id={`input:${leftIndex}:${rightIndex}`}
+              key={rightIndex}
+            />
           ))}
-      </Row>
-      {rules.map(
-        (rule, leftIndex) =>
-          leftIndex !== 0 && (
-            <Row key={leftIndex}>
-              <Col>
-                <Form.Control
-                  id={`input:${leftIndex}:-1`}
-                  type="text"
-                  placeholder=""
-                  value={rule.left}
-                  onKeyDown={handleRuleInputKeyDown(
-                    leftIndex,
-                    -1,
-                    rule.left,
-                    '',
-                  )}
-                  onChange={handleRuleOnChange(leftIndex, -1)}
-                ></Form.Control>
-              </Col>
-              <Col>
-                <Form.Text className="text-muted">→</Form.Text>
-              </Col>
-              {rule.right.map((right, rightIndex) => (
-                <Col key={rightIndex}>
-                  <Form.Control
-                    id={`input:${leftIndex}:${rightIndex}`}
-                    type="text"
-                    placeholder="ε"
-                    value={right}
-                    onKeyDown={handleRuleInputKeyDown(
-                      leftIndex,
-                      rightIndex,
-                      rule.left,
-                      right,
-                    )}
-                    onChange={handleRuleOnChange(leftIndex, rightIndex)}
-                  ></Form.Control>
-                </Col>
-              ))}
-              <Col>
-                <Button onClick={() => removeRule(leftIndex)}>
-                  <FontAwesomeIcon icon={faCircleXmark} />
-                </Button>
-              </Col>
-            </Row>
-          ),
-      )}
-      <Row>
-        <Col>
-          <Button
-            onClick={() => {
-              setCurrentInputIndex({ leftIndex: rules.length, rightIndex: -1 });
-              addRuleLeft(rules.length);
+
+          {leftIndex > 0 && (
+            <Button
+              variant="outline-danger"
+              onClick={() => {
+                removeRule(leftIndex);
+                setCurrentInputIndex({
+                  leftIndex: leftIndex - 1,
+                  rightIndex: -1,
+                });
+              }}
+            >
+              <FontAwesomeIcon icon={faXmarkCircle} />
+            </Button>
+          )}
+        </Container>
+      ))}
+      <Container style={{ padding: '1vh 0' }}>
+        <Button
+          onClick={() => {
+            setCurrentInputIndex({ leftIndex: rules.length, rightIndex: -1 });
+            addRuleLeft(rules.length);
+          }}
+        >
+          <FontAwesomeIcon icon={faCirclePlus} />
+          Clique aqui ou pressione 'Enter' para adicionar uma regra de produção
+        </Button>
+      </Container>
+      <Container style={{ padding: '1vh 0 ' }}>
+        <h3>Definição da Gramática:</h3>
+        <Container style={{ padding: '0', fontFamily: 'monospace' }}>
+          {rules.length &&
+            'G = ({' +
+              (rules.length > 1 &&
+              rules.map((rule) => rule.left).filter((rule) => rule !== '')
+                .length > 1
+                ? rules
+                    .map((rule) => rule.left)
+                    .filter((rule) => rule !== '')
+                    .join(', ')
+                : rules[0].left) +
+              '}, {' +
+              terminals.join(',') +
+              '} P, ' +
+              rules[0].left +
+              ')'}
+          <br />
+          {'P = {'}
+          <ul
+            style={{
+              listStyleType: 'none',
+              margin: '0',
+              padding: '0 1vw',
             }}
           >
-            <FontAwesomeIcon icon={faCirclePlus} />
-            Clique aqui ou pressione 'Enter' para adicionar uma regra de
-            produção
-          </Button>
-        </Col>
-      </Row>
-      <Container>
-        <h3>Definição da Gramática:</h3>
-        {rules.length &&
-          'G = ({' +
-            (rules.length > 1 &&
-            rules.map((rule) => rule.left).filter((rule) => rule !== '')
-              .length > 1
-              ? rules
-                  .map((rule) => rule.left)
-                  .filter((rule) => rule !== '')
-                  .join(', ')
-              : rules[0].left) +
-            '}, {' +
-            terminals.join(',') +
-            '} P, ' +
-            rules[0].left +
-            ')'}
-        <p />
-        <p>{'P = {'}</p>
-        <ul>
-          {rules.map(
-            (rule, index) =>
-              rule.left !== '' && (
-                <li key={index}>
-                  {rule.left} →{' '}
-                  {rule.right.map((rule) => (rule ? rule : 'ε')).join(' | ')}
-                </li>
-              ),
-          )}
-        </ul>
-        <p>{'}'}</p>
+            {rules.map(
+              (rule, index) =>
+                rule.left !== '' && (
+                  <li key={index}>
+                    {rule.left} →{' '}
+                    {rule.right.map((rule) => (rule ? rule : 'ε')).join(' | ')}
+                  </li>
+                ),
+            )}
+          </ul>
+          <p>{'}'}</p>
+        </Container>
       </Container>
-      <Container>
-        <h3>Teste</h3>
+      <Container style={{ padding: '0' }}>
+        <h3>Testar cadeias pertencentes a gramática:</h3>
         <Form.Control
           type="text"
           placeholder="Vazio"
