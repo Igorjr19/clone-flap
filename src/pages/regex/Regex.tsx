@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Form, InputGroup, Stack } from 'react-bootstrap';
+import { Container, Form, InputGroup, Stack } from 'react-bootstrap';
 import { checkRegex } from '../../util/regex/regex';
 
 function Regex() {
@@ -28,55 +28,58 @@ function Regex() {
     };
 
   return (
-    <Stack gap={0}>
-      <div className="p-2">
-        <InputGroup className="mb-3">
-          <InputGroup.Text>Expressão Regular</InputGroup.Text>
-          <Form.Control
-            type="text"
-            placeholder="Exemplo: ^[A-Za-z0-9]+$"
-            value={regex}
-            onChange={onChangeRegex}
-          />
-        </InputGroup>
-      </div>
-      <div className="p-2">
-        <InputGroup className="mb-3">
-          <InputGroup.Text>Texto 1</InputGroup.Text>
-          <Form.Control
-            type="text"
-            placeholder="Vazio"
-            value={input1}
-            onChange={onChangeInput(setInput1, setResult1)}
-            style={{
-              backgroundColor: empty
-                ? ''
-                : result1
-                  ? 'lightgreen'
-                  : 'lightcoral',
-            }}
-          />
-        </InputGroup>
-      </div>
-      <div className="p-2">
-        <InputGroup className="mb-3">
-          <InputGroup.Text>Texto 2</InputGroup.Text>
-          <Form.Control
-            type="text"
-            placeholder="Vazio"
-            value={input2}
-            onChange={onChangeInput(setInput2, setResult2)}
-            style={{
-              backgroundColor: empty
-                ? ''
-                : result2
-                  ? 'lightgreen'
-                  : 'lightcoral',
-            }}
-          />
-        </InputGroup>
-      </div>
-    </Stack>
+    <Container>
+      <h1>Expressão Regular</h1>
+      <Stack gap={0}>
+        <div className="p-2">
+          <InputGroup className="mb-3">
+            <InputGroup.Text>Expressão Regular</InputGroup.Text>
+            <Form.Control
+              type="text"
+              placeholder="Exemplo: ^[A-Za-z0-9]+$"
+              value={regex}
+              onChange={onChangeRegex}
+            />
+          </InputGroup>
+        </div>
+        <div className="p-2">
+          <InputGroup className="mb-3">
+            <InputGroup.Text>Texto 1</InputGroup.Text>
+            <Form.Control
+              type="text"
+              placeholder="Vazio"
+              value={input1}
+              onChange={onChangeInput(setInput1, setResult1)}
+              style={{
+                backgroundColor: empty
+                  ? ''
+                  : result1
+                    ? 'lightgreen'
+                    : 'lightcoral',
+              }}
+            />
+          </InputGroup>
+        </div>
+        <div className="p-2">
+          <InputGroup className="mb-3">
+            <InputGroup.Text>Texto 2</InputGroup.Text>
+            <Form.Control
+              type="text"
+              placeholder="Vazio"
+              value={input2}
+              onChange={onChangeInput(setInput2, setResult2)}
+              style={{
+                backgroundColor: empty
+                  ? ''
+                  : result2
+                    ? 'lightgreen'
+                    : 'lightcoral',
+              }}
+            />
+          </InputGroup>
+        </div>
+      </Stack>
+    </Container>
   );
 }
 
