@@ -153,7 +153,8 @@ function RegularGrammar() {
       }
       if (
         e.key === 'ArrowRight' &&
-        e.currentTarget.selectionStart === right.length
+        (e.currentTarget.selectionStart === right.length ||
+          e.currentTarget.selectionStart === right.length + 1)
       ) {
         setCurrentInputIndex({ leftIndex, rightIndex: rightIndex + 1 });
       }
@@ -198,7 +199,6 @@ function RegularGrammar() {
     };
 
   useEffect(() => {
-    console.log(currentInputIndex);
     const input = document.getElementById(
       `input:${currentInputIndex.leftIndex}:${currentInputIndex.rightIndex}`,
     ) as HTMLInputElement;
@@ -228,8 +228,18 @@ function RegularGrammar() {
   }, [rules]);
 
   return (
-    <Container>
+    <Container style={{ padding: '10vh 0' }}>
       <h1>Gramática Regular</h1>
+      <p>Instruções:</p>
+      <ul>
+        <li>O símbolo inicial será sempre S.</li>
+        <li>Aperte "|" para adicionar outra regra para um não-terminal.</li>
+        <li>Aperte "Enter" para adicionar uma nova regra de produção.</li>
+        <li>Um input vazio representa o símbolo ε (vazio).</li>
+        <li>
+          Regras de produção com o não-terminal vazio serão desconsideradas.
+        </li>
+      </ul>
       <Container style={{ padding: '1vh 0', display: 'flex', gap: '1vw' }}>
         <Button
           style={{
@@ -268,6 +278,7 @@ function RegularGrammar() {
             )}
             id={`input:${leftIndex}:-1`}
             disabled={leftIndex === 0}
+            autoComplete="off"
           />
           <FontAwesomeIcon icon={faArrowRight} />
           {rule.right.map((right, rightIndex) => (
@@ -285,6 +296,7 @@ function RegularGrammar() {
               )}
               id={`input:${leftIndex}:${rightIndex}`}
               key={rightIndex}
+              autoComplete="off"
             />
           ))}
 
@@ -306,13 +318,19 @@ function RegularGrammar() {
       ))}
       <Container style={{ padding: '1vh 0' }}>
         <Button
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '1vw',
+          }}
           onClick={() => {
             setCurrentInputIndex({ leftIndex: rules.length, rightIndex: -1 });
             addRuleLeft(rules.length);
           }}
         >
           <FontAwesomeIcon icon={faCirclePlus} />
-          Clique aqui ou pressione 'Enter' para adicionar uma regra de produção
+          <span>Adicionar regra de produção</span>
         </Button>
       </Container>
       <Container style={{ padding: '1vh 0 ' }}>
