@@ -68,37 +68,28 @@ function RegularGrammar() {
     if (test.match(/[A-Z]/g)) {
       return false;
     }
-    // Helper function to match the string using the grammar
-    function match(remainingInput: string, currentSymbol: string): boolean {
-      // If both remaining input and current symbol are empty, it's a valid match
+
+    const match = (remainingInput: string, currentSymbol: string): boolean => {
       if (remainingInput.length === 0 && currentSymbol === '') {
         return true;
       }
 
-      // Find rules where the currentSymbol is on the left-hand side
       const matchingRules = rules.filter((rule) => rule.left === currentSymbol);
 
-      // Try each matching rule's production
       for (const rule of matchingRules) {
         for (const production of rule.right) {
-          // Handle the case where production is ε (empty string)
           if (production === '' && match(remainingInput, '')) {
             return true;
           }
-
-          // If the production matches the start of remainingInput
           if (remainingInput.startsWith(production)) {
             const remaining = remainingInput.slice(production.length);
             if (match(remaining, '')) {
               return true;
             }
           }
-
-          // Handle terminal + non-terminal cases (e.g., 'aA' or 'bB')
           if (production.length > 1) {
-            const terminalPart = production.slice(0, -1); // All but the last symbol (terminals)
-            const nextNonTerminal = production.slice(-1); // The last symbol (non-terminal)
-
+            const terminalPart = production.slice(0, -1);
+            const nextNonTerminal = production.slice(-1);
             if (
               remainingInput.startsWith(terminalPart) &&
               match(remainingInput.slice(terminalPart.length), nextNonTerminal)
@@ -108,9 +99,8 @@ function RegularGrammar() {
           }
         }
       }
-
       return false;
-    }
+    };
 
     return match(test, startSymbol);
   };
