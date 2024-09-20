@@ -106,14 +106,21 @@ function RegularGrammar() {
   };
 
   const handleRuleInputKeyDown =
-    (leftIndex: number, rightIndex: number, right: string) =>
+    (leftIndex: number, rightIndex: number, left: string, right: string) =>
     (e: React.KeyboardEvent<HTMLInputElement>) => {
+      console.log(e.key);
+      console.log(leftIndex, rightIndex, left, right);
+
       if (e.key === 'Enter') {
         addRuleLeft(leftIndex);
       }
       if (e.key === 'Backspace' && right === '' && rightIndex === -1) {
-        e.preventDefault();
-        removeRule(leftIndex);
+        if (left === '') {
+          e.preventDefault();
+          removeRule(leftIndex);
+        } else {
+          return;
+        }
         return;
       }
       if (e.key === 'Backspace' && right === '' && rightIndex !== 0) {
@@ -190,7 +197,12 @@ function RegularGrammar() {
                 type="text"
                 placeholder="ε"
                 value={right}
-                onKeyDown={handleRuleInputKeyDown(0, rightIndex, right)}
+                onKeyDown={handleRuleInputKeyDown(
+                  0,
+                  rightIndex,
+                  rules[0].left,
+                  right,
+                )}
                 onChange={handleRuleOnChange(0, rightIndex)}
               ></Form.Control>
             </Col>
@@ -205,7 +217,12 @@ function RegularGrammar() {
                   type="text"
                   placeholder=""
                   value={rule.left}
-                  onKeyDown={handleRuleInputKeyDown(leftIndex, -1, '')}
+                  onKeyDown={handleRuleInputKeyDown(
+                    leftIndex,
+                    -1,
+                    rule.left,
+                    '',
+                  )}
                   onChange={handleRuleOnChange(leftIndex, -1)}
                 ></Form.Control>
               </Col>
@@ -222,6 +239,7 @@ function RegularGrammar() {
                     onKeyDown={handleRuleInputKeyDown(
                       leftIndex,
                       rightIndex,
+                      rule.left,
                       right,
                     )}
                     onChange={handleRuleOnChange(leftIndex, rightIndex)}
@@ -240,7 +258,8 @@ function RegularGrammar() {
         <Col>
           <Button onClick={() => addRuleLeft(rules.length)}>
             <FontAwesomeIcon icon={faCirclePlus} />
-            Clique aqui ou pressione 'Enter' para dicionar regra de produção
+            Clique aqui ou pressione 'Enter' para adicionar uma regra de
+            produção
           </Button>
         </Col>
       </Row>
