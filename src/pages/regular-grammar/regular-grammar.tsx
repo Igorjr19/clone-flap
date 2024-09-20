@@ -1,4 +1,4 @@
-import { faCirclePlus, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faCirclePlus, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useState } from 'react';
 import { Button, Col, Container, Form, Row } from 'react-bootstrap';
@@ -13,10 +13,25 @@ function RegularGrammar() {
   const [rules, setRules] = useState<Rule[]>([]);
   const [terminals, setTerminals] = useState<string[]>([]);
   const [test, setTest] = useState('');
-  const [result, setResult] = useState(false);
+  const [result, setResult] = useState(true);
+  const [currentInputIndex, setCurrentInputIndex] = useState<{
+    leftIndex: number;
+    rightIndex: number;
+  }>({ leftIndex: 0, rightIndex: 0 });
 
   const clearRules = () => {
     setRules([{ left: 'S', right: [''] }]);
+  };
+
+  const handleExample = () => {
+    setRules([
+      { left: 'S', right: ['aA'] },
+      { left: 'A', right: ['aB'] },
+      { left: 'B', right: ['aC'] },
+      { left: 'C', right: ['aC', 'bC', 'bD'] },
+      { left: 'D', right: ['bE'] },
+      { left: 'E', right: ['b'] },
+    ]);
   };
 
   const addRuleLeft = (leftIndex: number) => {
@@ -60,6 +75,7 @@ function RegularGrammar() {
   };
 
   const handleTestChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.target.value = e.target.value.replace(/[^a-z0-9]/g, '');
     setTest(e.target.value);
     setResult(checkTest(e.target.value));
   };
@@ -108,16 +124,15 @@ function RegularGrammar() {
   const handleRuleInputKeyDown =
     (leftIndex: number, rightIndex: number, left: string, right: string) =>
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      console.log(e.key);
-      console.log(leftIndex, rightIndex, left, right);
-
       if (e.key === 'Enter') {
         addRuleLeft(leftIndex);
+        setCurrentInputIndex({ leftIndex: leftIndex + 1, rightIndex: -1 });
       }
       if (e.key === 'Backspace' && right === '' && rightIndex === -1) {
         if (left === '') {
           e.preventDefault();
           removeRule(leftIndex);
+          setCurrentInputIndex({ leftIndex: leftIndex - 1, rightIndex: -1 });
         } else {
           return;
         }
@@ -126,9 +141,26 @@ function RegularGrammar() {
       if (e.key === 'Backspace' && right === '' && rightIndex !== 0) {
         e.preventDefault();
         removeRuleRight(leftIndex, rightIndex);
+        setCurrentInputIndex({ leftIndex, rightIndex: rightIndex - 1 });
       }
       if (e.key === '|' && rightIndex !== -1) {
         addRuleRight(leftIndex, rightIndex);
+        setCurrentInputIndex({ leftIndex, rightIndex: rightIndex + 1 });
+      }
+      if (
+        e.key === 'ArrowRight' &&
+        e.currentTarget.selectionStart === right.length
+      ) {
+        setCurrentInputIndex({ leftIndex, rightIndex: rightIndex + 1 });
+      }
+      if (e.key === 'ArrowLeft' && e.currentTarget.selectionStart === 0) {
+        setCurrentInputIndex({ leftIndex, rightIndex: rightIndex - 1 });
+      }
+      if (e.key === 'ArrowUp' && rules[leftIndex - 1]) {
+        setCurrentInputIndex({ leftIndex: leftIndex - 1, rightIndex });
+      }
+      if (e.key === 'ArrowDown' && rules[leftIndex + 1]) {
+        setCurrentInputIndex({ leftIndex: leftIndex + 1, rightIndex });
       }
     };
 
@@ -137,8 +169,15 @@ function RegularGrammar() {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (rightIndex === -1) {
         if (e.target.value.match(/[^A-Z]/g)) {
-          e.target.value = e.target.value.replace(/[^A-Z]/g, '');
-          return;
+          if (e.target.value.match(/[a-z]/g)) {
+            e.target.value = e.target.value.replace(
+              /[a-z]/g,
+              e.target.value.toUpperCase(),
+            );
+          } else {
+            e.target.value = e.target.value.replace(/[^A-Z]/g, '');
+            return;
+          }
         }
         handleRuleNameChange(leftIndex, e.target.value);
         return;
@@ -153,6 +192,16 @@ function RegularGrammar() {
       }
       handleRuleChange(leftIndex, rightIndex, e.target.value);
     };
+
+  useEffect(() => {
+    console.log(currentInputIndex);
+    const input = document.getElementById(
+      `input:${currentInputIndex.leftIndex}:${currentInputIndex.rightIndex}`,
+    ) as HTMLInputElement;
+    if (input) {
+      input.focus();
+    }
+  }, [currentInputIndex]);
 
   useEffect(() => {
     if (rules.length === 0) {
@@ -171,6 +220,7 @@ function RegularGrammar() {
       .flat()
       .filter((right, index, self) => self.indexOf(right) === index);
     setTerminals(newTerminals);
+    setResult(checkTest(test));
   }, [rules]);
 
   return (
@@ -181,10 +231,19 @@ function RegularGrammar() {
             Reset
           </Button>
         </Col>
+        <Col>
+          <Button variant="outline-success" onClick={handleExample}>
+            Exemplo
+          </Button>
+        </Col>
       </Row>
       <Row>
         <Col>
-          <Form.Control type="text" placeholder="S" disabled></Form.Control>
+          <Form.Control
+            type="text"
+            placeholder={startSymbol}
+            disabled
+          ></Form.Control>
         </Col>
         <Col>
           <Form.Text className="text-muted">→</Form.Text>
@@ -193,7 +252,7 @@ function RegularGrammar() {
           rules[0].right.map((right, rightIndex) => (
             <Col key={rightIndex}>
               <Form.Control
-                id={`input-${0}-${rightIndex}`}
+                id={`input:${0}:${rightIndex}`}
                 type="text"
                 placeholder="ε"
                 value={right}
@@ -214,6 +273,7 @@ function RegularGrammar() {
             <Row key={leftIndex}>
               <Col>
                 <Form.Control
+                  id={`input:${leftIndex}:-1`}
                   type="text"
                   placeholder=""
                   value={rule.left}
@@ -232,7 +292,7 @@ function RegularGrammar() {
               {rule.right.map((right, rightIndex) => (
                 <Col key={rightIndex}>
                   <Form.Control
-                    id={`input-${leftIndex}-${rightIndex}`}
+                    id={`input:${leftIndex}:${rightIndex}`}
                     type="text"
                     placeholder="ε"
                     value={right}
@@ -248,7 +308,7 @@ function RegularGrammar() {
               ))}
               <Col>
                 <Button onClick={() => removeRule(leftIndex)}>
-                  <FontAwesomeIcon icon={faXmark} />
+                  <FontAwesomeIcon icon={faCircleXmark} />
                 </Button>
               </Col>
             </Row>
@@ -256,7 +316,12 @@ function RegularGrammar() {
       )}
       <Row>
         <Col>
-          <Button onClick={() => addRuleLeft(rules.length)}>
+          <Button
+            onClick={() => {
+              setCurrentInputIndex({ leftIndex: rules.length, rightIndex: -1 });
+              addRuleLeft(rules.length);
+            }}
+          >
             <FontAwesomeIcon icon={faCirclePlus} />
             Clique aqui ou pressione 'Enter' para adicionar uma regra de
             produção
@@ -264,25 +329,23 @@ function RegularGrammar() {
         </Col>
       </Row>
       <Container>
-        <h3>Definição da gramática:</h3>
-        <p>
-          {rules.length &&
-            'G = ({' +
-              (rules.length > 1 &&
-              rules.map((rule) => rule.left).filter((rule) => rule !== '')
-                .length > 1
-                ? rules
-                    .map((rule) => rule.left)
-                    .filter((rule) => rule !== '')
-                    .join(', ')
-                : rules[0].left) +
-              '}, {' +
-              terminals.join(',') +
-              '} P, ' +
-              rules[0].left +
-              ')'}
-          <p />
-        </p>
+        <h3>Definição da Gramática:</h3>
+        {rules.length &&
+          'G = ({' +
+            (rules.length > 1 &&
+            rules.map((rule) => rule.left).filter((rule) => rule !== '')
+              .length > 1
+              ? rules
+                  .map((rule) => rule.left)
+                  .filter((rule) => rule !== '')
+                  .join(', ')
+              : rules[0].left) +
+            '}, {' +
+            terminals.join(',') +
+            '} P, ' +
+            rules[0].left +
+            ')'}
+        <p />
         <p>{'P = {'}</p>
         <ul>
           {rules.map(
