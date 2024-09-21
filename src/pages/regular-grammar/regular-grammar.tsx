@@ -4,8 +4,8 @@ import {
   faXmarkCircle,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useEffect, useState } from 'react';
-import { Button, Container, Form } from 'react-bootstrap';
+import React, { useEffect, useState } from 'react';
+import { Accordion, Button, Container, Form } from 'react-bootstrap';
 
 interface Rule {
   left: string;
@@ -227,19 +227,56 @@ function RegularGrammar() {
     setResult(checkTest(test));
   }, [rules]);
 
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    const matchMedia = window.matchMedia('(prefers-color-scheme: dark)');
+    setTheme(matchMedia.matches ? 'dark' : 'light');
+    matchMedia.addEventListener('change', (e) => {
+      setTheme(e.matches ? 'dark' : 'light');
+    });
+    return () => {
+      matchMedia.removeEventListener('change', () => {});
+    };
+  }, []);
+
+  const green = theme === 'light' ? 'lightgreen' : 'darkgreen';
+  const red = theme === 'light' ? 'lightcoral' : 'darkred';
+
+  const getInputWidth = (value: string) => {
+    const span = document.createElement('span');
+    span.style.visibility = 'hidden';
+    span.style.position = 'absolute';
+    span.style.whiteSpace = 'pre';
+    span.textContent = value || 'ε';
+    document.body.appendChild(span);
+    const width = span.offsetWidth;
+    document.body.removeChild(span);
+    return width + 45; // Add some padding
+  };
+
   return (
-    <Container style={{ padding: '10vh 0' }}>
+    <Container style={{ padding: '5vh 0' }} data-bs-theme={theme}>
       <h1>Gramática Regular</h1>
-      <p>Instruções:</p>
-      <ul>
-        <li>O símbolo inicial será sempre S.</li>
-        <li>Aperte "|" para adicionar outra regra para um não-terminal.</li>
-        <li>Aperte "Enter" para adicionar uma nova regra de produção.</li>
-        <li>Um input vazio representa o símbolo ε (vazio).</li>
-        <li>
-          Regras de produção com o não-terminal vazio serão desconsideradas.
-        </li>
-      </ul>
+      <Accordion style={{ width: '35vw' }}>
+        <Accordion.Header>Instruções</Accordion.Header>
+        <Accordion.Body>
+          <ul>
+            <li>O símbolo inicial será sempre S.</li>
+            <li>Aperte "|" para adicionar outra regra para um não-terminal.</li>
+            <li>Aperte "Enter" para adicionar uma nova regra de produção.</li>
+            <li>Um input vazio representa o símbolo ε (vazio).</li>
+            <li>
+              Regras de produção com o não-terminal vazio serão desconsideradas.
+            </li>
+            <li>
+              No momento, para os terminais, utilize apenas letras minúsculas e
+              números.
+            </li>
+            <li>Para os não-terminais utilize letras maiúsculas.</li>
+          </ul>
+        </Accordion.Body>
+      </Accordion>
       <Container style={{ padding: '1vh 0', display: 'flex', gap: '1vw' }}>
         <Button
           style={{
@@ -282,22 +319,25 @@ function RegularGrammar() {
           />
           <FontAwesomeIcon icon={faArrowRight} />
           {rule.right.map((right, rightIndex) => (
-            <Form.Control
-              style={{ maxWidth: '10vw' }}
-              type="text"
-              placeholder="ε"
-              value={right}
-              onChange={handleRuleOnChange(leftIndex, rightIndex)}
-              onKeyDown={handleRuleInputKeyDown(
-                leftIndex,
-                rightIndex,
-                rule.left,
-                right,
-              )}
-              id={`input:${leftIndex}:${rightIndex}`}
-              key={rightIndex}
-              autoComplete="off"
-            />
+            <React.Fragment key={rightIndex}>
+              <Form.Control
+                style={{ maxWidth: `${getInputWidth(right)}px` }}
+                type="text"
+                placeholder="ε"
+                value={right}
+                onChange={handleRuleOnChange(leftIndex, rightIndex)}
+                onKeyDown={handleRuleInputKeyDown(
+                  leftIndex,
+                  rightIndex,
+                  rule.left,
+                  right,
+                )}
+                id={`input:${leftIndex}:${rightIndex}`}
+                key={rightIndex}
+                autoComplete="off"
+              />
+              {rightIndex < rule.right.length - 1 && <span>|</span>}
+            </React.Fragment>
           ))}
 
           {leftIndex > 0 && (
@@ -381,7 +421,7 @@ function RegularGrammar() {
           value={test}
           onChange={handleTestChange}
           style={{
-            backgroundColor: result ? 'lightgreen' : 'lightcoral',
+            backgroundColor: result ? green : red,
           }}
         />
       </Container>

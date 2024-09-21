@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Container, Form, InputGroup, Stack } from 'react-bootstrap';
 import { checkRegex } from '../../util/regex/regex';
 
@@ -9,6 +9,18 @@ function Regex() {
   const [result1, setResult1] = useState(false);
   const [result2, setResult2] = useState(false);
   const [empty, setEmpty] = useState(true);
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  useEffect(() => {
+    const matchMedia = window.matchMedia('(prefers-color-scheme: dark)');
+    setTheme(matchMedia.matches ? 'dark' : 'light');
+    matchMedia.addEventListener('change', (e) => {
+      setTheme(e.matches ? 'dark' : 'light');
+    });
+    return () => {
+      matchMedia.removeEventListener('change', () => {});
+    };
+  }, []);
 
   const onChangeRegex = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmpty(e.target.value === '');
@@ -26,6 +38,9 @@ function Regex() {
       setInput(e.target.value);
       setResult(checkRegex(regex, e.target.value));
     };
+
+  const green = theme === 'light' ? 'lightgreen' : 'darkgreen';
+  const red = theme === 'light' ? 'lightcoral' : 'darkred';
 
   return (
     <Container>
@@ -51,11 +66,7 @@ function Regex() {
               value={input1}
               onChange={onChangeInput(setInput1, setResult1)}
               style={{
-                backgroundColor: empty
-                  ? ''
-                  : result1
-                    ? 'lightgreen'
-                    : 'lightcoral',
+                backgroundColor: empty ? '' : result1 ? green : red,
               }}
             />
           </InputGroup>
@@ -69,11 +80,7 @@ function Regex() {
               value={input2}
               onChange={onChangeInput(setInput2, setResult2)}
               style={{
-                backgroundColor: empty
-                  ? ''
-                  : result2
-                    ? 'lightgreen'
-                    : 'lightcoral',
+                backgroundColor: empty ? '' : result2 ? green : red,
               }}
             />
           </InputGroup>
