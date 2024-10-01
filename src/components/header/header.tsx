@@ -49,6 +49,15 @@ function Header() {
                 Gramática Regular
               </NavLink>
             </Nav.Item>
+            <Nav.Item className="ms-3">
+              <NavLink
+                to="/FiniteAutomata"
+                style={style}
+                className="form-control"
+              >
+                Autômato Finito
+              </NavLink>
+            </Nav.Item>
           </Nav>
         </Navbar>
       </Row>
