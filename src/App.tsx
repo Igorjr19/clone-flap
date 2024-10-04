@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
 import { HashRouter, Route, Routes } from 'react-router-dom';
 import Header from './components/header/header';
-import FiniteAutomata from './pages/FiniteAutomata/FiniteAutomata';
+import FiniteAutomata from './pages/finite-automata/finite-automata';
 import Home from './pages/home/Home';
 import Regex from './pages/regex/Regex';
 import RegularGrammar from './pages/regular-grammar/regular-grammar';

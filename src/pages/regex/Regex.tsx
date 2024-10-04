@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Container, Form, InputGroup, Stack } from 'react-bootstrap';
-import { checkRegex } from '../../util/regex/regex';
 
 function Regex() {
   const [regex, setRegex] = useState('');
@@ -10,6 +9,11 @@ function Regex() {
   const [result2, setResult2] = useState(false);
   const [empty, setEmpty] = useState(true);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  const checkRegex = (regex: string, input: string) => {
+    const re = new RegExp(regex);
+    return re.test(input);
+  };
 
   useEffect(() => {
     const matchMedia = window.matchMedia('(prefers-color-scheme: dark)');

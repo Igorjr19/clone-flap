@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
-import authorsJson from '../../authors.json';
 
 function Home() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+
+  const authors = [
+    'Ígor José Rodrigues',
+    'Lucas Vinícius de Carvalho Ikeda',
+    'Matheus Augustho de Moura Nazaro',
+  ];
 
   useEffect(() => {
     const matchMedia = window.matchMedia('(prefers-color-scheme: dark)');
@@ -26,9 +31,9 @@ function Home() {
       <br />
       <br />
       <h2 className="display-3 text-center">Autores:</h2>
-      {authorsJson.authors.map((author) => (
-        <h3 className="display-5 text-center" key={author.name}>
-          {author.name}
+      {authors.map((author) => (
+        <h3 className="display-5 text-center" key={author}>
+          {author}
         </h3>
       ))}
     </Container>
