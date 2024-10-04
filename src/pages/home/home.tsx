@@ -15,7 +15,6 @@ function Home() {
     setTheme(matchMedia.matches ? 'dark' : 'light');
     matchMedia.addEventListener('change', (e) => {
       setTheme(e.matches ? 'dark' : 'light');
-      console.log(e.matches);
     });
     return () => {
       matchMedia.removeEventListener('change', () => {});

@@ -34,7 +34,10 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/regex" element={<Regex />} />
           <Route path="/regular-grammar" element={<RegularGrammar />} />
-          <Route path="/FiniteAutomata" element={<FiniteAutomata />} />
+          <Route
+            path="/FiniteAutomata"
+            element={<FiniteAutomata theme={theme} />}
+          />
         </Routes>
       </Container>
     </HashRouter>

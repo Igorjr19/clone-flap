@@ -1,13 +1,28 @@
-import { shapes } from '@joint/core';
+import { dia, shapes } from '@joint/core';
 import React, { useEffect, useState } from 'react';
 import { Container, Dropdown } from 'react-bootstrap';
 import { useDrag } from './hooks/useDrag';
 import { useInitializePaper } from './hooks/useInitializePaper';
 import { useZoom } from './hooks/useZoom';
 
-const FiniteAutomata: React.FC = () => {
+interface FiniteAutomataProps {
+  theme: 'light' | 'dark';
+}
+
+const FiniteAutomata: React.FC<FiniteAutomataProps> = (
+  props: FiniteAutomataProps,
+) => {
+  const [selected, setSelected] = useState<dia.CellView | null>(null);
+  const [statesIndexes, setStatesIndexes] = useState<number[]>([0]);
+
+  const { theme } = props;
   const namespace = shapes;
-  const { paperRef, paper, addCircle } = useInitializePaper(namespace);
+  const { paperRef, paper, addCircle } = useInitializePaper(
+    namespace,
+    setSelected,
+    statesIndexes,
+    setStatesIndexes,
+  );
   useZoom(paper);
   const { isDragging, ctrlDown } = useDrag(paper, paperRef);
 
@@ -45,6 +60,16 @@ const FiniteAutomata: React.FC = () => {
     }
   };
 
+  const handleRemoveElement = () => {
+    if (selected) {
+      const index = parseInt(
+        selected.model?.attributes?.attrs?.label?.text?.slice(1) as string,
+      );
+      setStatesIndexes(statesIndexes.filter((i) => i !== index) || []);
+      selected.remove();
+    }
+  };
+
   useEffect(() => {
     document.addEventListener('click', handleClickOutside);
     return () => {
@@ -67,6 +92,8 @@ const FiniteAutomata: React.FC = () => {
           width: '85%',
           height: '100%',
           cursor: isDragging ? (ctrlDown ? 'grabbing' : 'grab') : 'default',
+          border: `0.25rem solid ${theme === 'dark' ? '#343A40' : '#E9ECEF'}`,
+          borderRadius: 10,
         }}
       />
       {showMenu && (
@@ -83,6 +110,9 @@ const FiniteAutomata: React.FC = () => {
             Adicionar círculo
           </Dropdown.Item>
           <Dropdown.Item onClick={handleAddLink}>Adicionar link</Dropdown.Item>
+          <Dropdown.Item onClick={handleRemoveElement}>
+            Remover elemento
+          </Dropdown.Item>
         </Dropdown.Menu>
       )}
     </Container>

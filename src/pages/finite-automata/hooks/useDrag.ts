@@ -49,10 +49,20 @@ export const useDrag = (
     };
 
     const paperEl = paperRef.current;
+
+    let mouseDownTimeout: number | undefined;
+    const handleMouseDownWithTimeout = (event: MouseEvent) => {
+      mouseDownTimeout = setTimeout(() => handleMouseDown(event), 150);
+    };
+    const handleMouseUpWithTimeout = () => {
+      clearTimeout(mouseDownTimeout);
+      handleMouseUp();
+    };
+
     if (paperEl) {
-      paperEl.addEventListener('mousedown', handleMouseDown);
+      paperEl.addEventListener('mousedown', handleMouseDownWithTimeout);
       paperEl.addEventListener('mousemove', handleMouseMove);
-      paperEl.addEventListener('mouseup', handleMouseUp);
+      paperEl.addEventListener('mouseup', handleMouseUpWithTimeout);
     }
 
     return () => {
