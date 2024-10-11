@@ -136,6 +136,9 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
         setSelectedCircle([]);
         return;
       }
+      if (selectedCircle.includes(circle)) {
+        return;
+      }
       setSelectedCircle([circle]);
     }
   };
@@ -161,7 +164,6 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
     const x = event.clientX;
     const y = event.clientY;
     handleSelectCircle(event);
-
     if (!identifyCircle(x, y)) {
       setIsSelectingArea(true);
       setSelectedCircle([]);
