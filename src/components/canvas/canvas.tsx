@@ -1,12 +1,64 @@
 import { useEffect } from 'react';
+import {
+  Circle,
+  Coordinate,
+} from '../../pages/finite-automata/finite-automata';
+
+interface OnCanvasDrag {
+  OnMouseDown: (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => void;
+  OnMouseMove: (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => void;
+  OnMouseUp: (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => void;
+}
 
 interface CanvasProps {
   theme: 'light' | 'dark';
   height?: number | string;
   width?: number | string;
+  circles?: Circle[];
+  circleRadius?: number;
+  selectedCircle?: Circle[];
+  onCanvasClick?: (
+    event: React.MouseEvent<HTMLCanvasElement, MouseEvent>,
+  ) => void;
+  onCanvasDrag?: OnCanvasDrag;
+  draggingOffset?: Coordinate;
 }
 
 function Canvas(props: CanvasProps) {
+  const drawCircle = (
+    canvas: HTMLCanvasElement,
+    x: number,
+    y: number,
+    id: number,
+  ) => {
+    const circleRadius = props.circleRadius || 20;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.beginPath();
+    ctx.fillStyle = props.selectedCircle
+      ?.map((circle) => circle.id)
+      .includes(id)
+      ? 'blue'
+      : 'orange';
+    ctx.ellipse(x, y, circleRadius, circleRadius, 0, 0, 2 * Math.PI);
+    ctx.strokeStyle = props.theme === 'light' ? 'black' : 'white';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+    ctx.fill();
+    ctx.fillStyle = props.theme === 'light' ? 'white' : 'black';
+    ctx.font = `${circleRadius}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`Q${id}`, x, y);
+  };
+
+  const clearCanvas = (canvas: HTMLCanvasElement) => {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+
   const drawPaperBackground = (canvas: HTMLCanvasElement) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -35,11 +87,27 @@ function Canvas(props: CanvasProps) {
     }
   };
 
+  const draw = () => {
+    const canvas = document.querySelector('canvas');
+    if (!canvas) return;
+    clearCanvas(canvas);
+    drawPaperBackground(canvas);
+    if (!props.circles) return;
+    props.circles.forEach((circle) => {
+      drawCircle(canvas, circle.position.x, circle.position.y, circle.id);
+    });
+  };
+
+  useEffect(() => {
+    draw();
+  }, [props.circles, props.selectedCircle, props.draggingOffset]);
+
   useEffect(() => {
     const canvas = document.querySelector('canvas');
     if (!canvas) return;
+    clearCanvas(canvas);
     drawPaperBackground(canvas);
-  }, [props.theme]);
+  }, []);
 
   return (
     <canvas
@@ -51,6 +119,10 @@ function Canvas(props: CanvasProps) {
         height: '100%',
         margin: 0,
       }}
+      onClick={props.onCanvasClick}
+      onMouseDown={props.onCanvasDrag?.OnMouseDown}
+      onMouseMove={props.onCanvasDrag?.OnMouseMove}
+      onMouseUp={props.onCanvasDrag?.OnMouseUp}
     ></canvas>
   );
 }
