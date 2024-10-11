@@ -17,14 +17,28 @@ interface CanvasProps {
   circles?: Circle[];
   circleRadius?: number;
   selectedCircle?: Circle[];
-  onCanvasClick?: (
-    event: React.MouseEvent<HTMLCanvasElement, MouseEvent>,
-  ) => void;
   onCanvasDrag?: OnCanvasDrag;
+  dragStartPosition?: Coordinate;
   draggingOffset?: Coordinate;
+  isSelectingArea?: boolean;
 }
 
 function Canvas(props: CanvasProps) {
+  const drawSelectionArea = (
+    canvas: HTMLCanvasElement,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+  ) => {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.beginPath();
+    ctx.rect(x, y, width, height);
+    ctx.fillStyle = 'rgba(0, 140, 255, 0.1)';
+    ctx.fill();
+  };
+
   const drawCircle = (
     canvas: HTMLCanvasElement,
     x: number,
@@ -92,10 +106,21 @@ function Canvas(props: CanvasProps) {
     if (!canvas) return;
     clearCanvas(canvas);
     drawPaperBackground(canvas);
-    if (!props.circles) return;
-    props.circles.forEach((circle) => {
-      drawCircle(canvas, circle.position.x, circle.position.y, circle.id);
-    });
+
+    if (props.isSelectingArea) {
+      drawSelectionArea(
+        canvas,
+        props.dragStartPosition?.x || 0,
+        props.dragStartPosition?.y || 0,
+        props.draggingOffset?.x || 0,
+        props.draggingOffset?.y || 0,
+      );
+    }
+    if (props.circles) {
+      props.circles.forEach((circle) => {
+        drawCircle(canvas, circle.position.x, circle.position.y, circle.id);
+      });
+    }
   };
 
   useEffect(() => {
@@ -119,7 +144,6 @@ function Canvas(props: CanvasProps) {
         height: '100%',
         margin: 0,
       }}
-      onClick={props.onCanvasClick}
       onMouseDown={props.onCanvasDrag?.OnMouseDown}
       onMouseMove={props.onCanvasDrag?.OnMouseMove}
       onMouseUp={props.onCanvasDrag?.OnMouseUp}

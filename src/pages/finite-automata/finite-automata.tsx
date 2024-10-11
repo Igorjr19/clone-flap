@@ -33,6 +33,7 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
     null,
   );
   const [dragOffset, setDragOffset] = useState<Coordinate | null>(null);
+  const [isSelectingArea, setIsSelectingArea] = useState<boolean>(false);
 
   const handleContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -56,6 +57,35 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
       const dy = y - position.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
       return distance <= CIRCLE_RADIUS * 1.5;
+    });
+  };
+
+  const identifyCircleInArea = (
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+  ) => {
+    return circles.filter((circle) => {
+      const { position } = circle;
+      return (
+        (position.x >= x1 &&
+          position.x <= x2 &&
+          position.y >= y1 &&
+          position.y <= y2) ||
+        (position.x <= x1 &&
+          position.x >= x2 &&
+          position.y <= y1 &&
+          position.y >= y2) ||
+        (position.x >= x1 &&
+          position.x <= x2 &&
+          position.y <= y1 &&
+          position.y >= y2) ||
+        (position.x <= x1 &&
+          position.x >= x2 &&
+          position.y >= y1 &&
+          position.y <= y2)
+      );
     });
   };
 
@@ -121,15 +151,20 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
     setCircles([]);
   };
 
+  const handleSelectArea = (x1: number, y1: number, x2: number, y2: number) => {
+    setSelectedCircle(identifyCircleInArea(x1, y1, x2, y2));
+  };
+
   const handleMouseDown = (
     event: React.MouseEvent<HTMLCanvasElement, MouseEvent>,
   ) => {
     const x = event.clientX;
     const y = event.clientY;
+    handleSelectCircle(event);
 
     if (!identifyCircle(x, y)) {
+      setIsSelectingArea(true);
       setSelectedCircle([]);
-      return;
     }
     setIsDragging(true);
     setDragStartPosition({ x: event.clientX, y: event.clientY });
@@ -138,10 +173,12 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
   const handleMouseMove = (
     event: React.MouseEvent<HTMLCanvasElement, MouseEvent>,
   ) => {
-    if (isDragging && dragStartPosition) {
-      const dx = event.clientX - dragStartPosition.x;
-      const dy = event.clientY - dragStartPosition.y;
-
+    if (!dragStartPosition) {
+      return;
+    }
+    const dx = event.clientX - dragStartPosition.x;
+    const dy = event.clientY - dragStartPosition.y;
+    if (isDragging && !isSelectingArea) {
       if (!dragOffset) {
         setDragOffset({ x: dx, y: dy });
       } else {
@@ -155,6 +192,15 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
         setDragOffset({ x: dx, y: dy });
       }
     }
+    if (isSelectingArea) {
+      setDragOffset({ x: dx, y: dy });
+      handleSelectArea(
+        dragStartPosition?.x || 0,
+        dragStartPosition?.y || 0,
+        event.clientX,
+        event.clientY,
+      );
+    }
   };
 
   const handleMouseUp = (
@@ -163,6 +209,7 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
     setIsDragging(false);
     setDragStartPosition(null);
     setDragOffset(null);
+    setIsSelectingArea(false);
   };
 
   const onCanvasDrag = {
@@ -194,9 +241,10 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
         circles={circles}
         circleRadius={CIRCLE_RADIUS}
         selectedCircle={selectedCircle}
-        onCanvasClick={(event) => handleSelectCircle(event)}
         onCanvasDrag={onCanvasDrag}
+        dragStartPosition={dragStartPosition || { x: 0, y: 0 }}
         draggingOffset={dragOffset || { x: 0, y: 0 }}
+        isSelectingArea={isSelectingArea}
       ></Canvas>
       {showMenu && (
         <Dropdown.Menu
