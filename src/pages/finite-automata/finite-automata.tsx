@@ -16,6 +16,8 @@ export interface Coordinate {
 export interface Circle {
   id: number;
   position: Coordinate;
+  isFinal?: boolean;
+  isInitial?: boolean;
 }
 
 export interface Link {
@@ -172,6 +174,30 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
     });
   };
 
+  const handleInitialCircle = (x: number, y: number) => {
+    const circle = identifyCircle(x, y);
+    console.log(circle);
+
+    if (!circle) {
+      return;
+    }
+
+    const initialCircle = circles.find((c) => c.isInitial);
+    if (initialCircle) {
+      initialCircle.isInitial = false;
+    }
+
+    circle.isInitial = !circle.isInitial;
+  };
+
+  const handleFinalState = (x: number, y: number) => {
+    const circle = identifyCircle(x, y);
+    if (!circle) {
+      return;
+    }
+    circle.isFinal = !circle.isFinal;
+  };
+
   const handleClear = () => {
     setCircles([]);
     setSelectedCircle([]);
@@ -305,6 +331,8 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
     };
   }, [showMenu]);
 
+  const isContextMenuOptionDisabled = !(selectedCircle.length > 0);
+
   return (
     <Container
       fluid
@@ -347,21 +375,39 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
             Adicionar estado
           </Dropdown.Item>
           <Dropdown.Item
+            disabled={isContextMenuOptionDisabled}
             onMouseOver={() => setShowSubMenuState(false)}
             onClick={handleAddLinkStart}
           >
             Adicionar transições
           </Dropdown.Item>
           <Dropdown.Item
+            disabled={isContextMenuOptionDisabled}
             onMouseOver={() => setShowSubMenuState(false)}
             onClick={() => handleRemoveCircle(contextMenu.x, contextMenu.y)}
           >
             Remover estado
           </Dropdown.Item>
-          <Dropdown.Item onMouseOver={() => setShowSubMenuState(true)}>
+          <Dropdown.Item
+            disabled={isContextMenuOptionDisabled}
+            onMouseOver={() => setShowSubMenuState(true)}
+          >
             Remover transições
           </Dropdown.Item>
-
+          <Dropdown.Item
+            disabled={isContextMenuOptionDisabled}
+            onMouseOver={() => setShowSubMenuState(false)}
+            onClick={() => handleInitialCircle(contextMenu.x, contextMenu.y)}
+          >
+            Estado inicial
+          </Dropdown.Item>
+          <Dropdown.Item
+            disabled={isContextMenuOptionDisabled}
+            onMouseOver={() => setShowSubMenuState(false)}
+            onClick={() => handleFinalState(contextMenu.x, contextMenu.y)}
+          >
+            Estado final
+          </Dropdown.Item>
           <Dropdown.Item
             onMouseOver={() => setShowSubMenuState(false)}
             onClick={handleClear}
@@ -371,6 +417,7 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
         </Dropdown.Menu>
       )}
       {showSubMenuState &&
+        selectedCircle.length > 0 &&
         links.filter(
           (link) =>
             link.from === selectedCircle[0] || link.to === selectedCircle[0],

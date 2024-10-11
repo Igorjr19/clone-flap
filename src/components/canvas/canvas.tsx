@@ -50,6 +50,8 @@ function Canvas(props: CanvasProps) {
     x: number,
     y: number,
     id: number,
+    initial: boolean = false,
+    final: boolean = false,
   ) => {
     const circleRadius = props.circleRadius || 20;
 
@@ -66,6 +68,25 @@ function Canvas(props: CanvasProps) {
     ctx.lineWidth = 5;
     ctx.stroke();
     ctx.fill();
+
+    if (initial) {
+      ctx.beginPath();
+      ctx.moveTo(x - circleRadius - 5, y);
+      ctx.lineTo(x - circleRadius - 20, y - 10);
+      ctx.lineTo(x - circleRadius - 20, y + 10);
+      ctx.closePath();
+      ctx.fillStyle = props.theme === 'light' ? 'black' : 'white';
+      ctx.fill();
+    }
+
+    if (final) {
+      ctx.beginPath();
+      ctx.ellipse(x, y, circleRadius + 5, circleRadius + 5, 0, 0, 2 * Math.PI);
+      ctx.strokeStyle = props.theme === 'light' ? 'black' : 'white';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+
     ctx.fillStyle = props.theme === 'light' ? 'white' : 'black';
     ctx.font = `${circleRadius}px Arial`;
     ctx.textAlign = 'center';
@@ -139,10 +160,6 @@ function Canvas(props: CanvasProps) {
       ?.map((link) => link.id)
       .includes(id);
 
-    console.log(props.links);
-    console.log(props.selectedLinks);
-    console.log(isLinkSelected);
-
     ctx.strokeStyle = isLinkSelected
       ? 'blue'
       : props.theme === 'light'
@@ -168,7 +185,14 @@ function Canvas(props: CanvasProps) {
     }
     if (props.circles) {
       props.circles.forEach((circle) => {
-        drawCircle(canvas, circle.position.x, circle.position.y, circle.id);
+        drawCircle(
+          canvas,
+          circle.position.x,
+          circle.position.y,
+          circle.id,
+          circle.isInitial,
+          circle.isFinal,
+        );
       });
     }
 
