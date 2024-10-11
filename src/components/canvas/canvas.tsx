@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import {
   Circle,
   Coordinate,
+  Link,
 } from '../../pages/finite-automata/finite-automata';
 
 interface OnCanvasDrag {
@@ -16,11 +17,16 @@ interface CanvasProps {
   width?: number | string;
   circles?: Circle[];
   circleRadius?: number;
-  selectedCircle?: Circle[];
+  selectedCircles?: Circle[];
   onCanvasDrag?: OnCanvasDrag;
   dragStartPosition?: Coordinate;
   draggingOffset?: Coordinate;
   isSelectingArea?: boolean;
+  links?: Link[];
+  isLinking?: boolean;
+  linkStart?: Circle | null;
+  linkOffset?: Coordinate | null;
+  selectedLinks?: Link[];
 }
 
 function Canvas(props: CanvasProps) {
@@ -50,7 +56,7 @@ function Canvas(props: CanvasProps) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     ctx.beginPath();
-    ctx.fillStyle = props.selectedCircle
+    ctx.fillStyle = props.selectedCircles
       ?.map((circle) => circle.id)
       .includes(id)
       ? 'blue'
@@ -101,6 +107,50 @@ function Canvas(props: CanvasProps) {
     }
   };
 
+  const drawArrow = (
+    canvas: HTMLCanvasElement,
+    from: Coordinate,
+    to: Coordinate,
+    id: number,
+  ) => {
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const headlen = 10;
+
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const angle = Math.atan2(dy, dx);
+
+    ctx.beginPath();
+    ctx.moveTo(from.x, from.y);
+    ctx.lineTo(to.x, to.y);
+    ctx.lineTo(
+      to.x - headlen * Math.cos(angle - Math.PI / 6),
+      to.y - headlen * Math.sin(angle - Math.PI / 6),
+    );
+    ctx.moveTo(to.x, to.y);
+    ctx.lineTo(
+      to.x - headlen * Math.cos(angle + Math.PI / 6),
+      to.y - headlen * Math.sin(angle + Math.PI / 6),
+    );
+
+    const isLinkSelected = props.selectedLinks
+      ?.map((link) => link.id)
+      .includes(id);
+
+    console.log(props.links);
+    console.log(props.selectedLinks);
+    console.log(isLinkSelected);
+
+    ctx.strokeStyle = isLinkSelected
+      ? 'blue'
+      : props.theme === 'light'
+        ? 'black'
+        : 'white';
+    ctx.stroke();
+  };
+
   const draw = () => {
     const canvas = document.querySelector('canvas');
     if (!canvas) return;
@@ -121,11 +171,38 @@ function Canvas(props: CanvasProps) {
         drawCircle(canvas, circle.position.x, circle.position.y, circle.id);
       });
     }
+
+    if (props.links) {
+      props.links.forEach((link) => {
+        drawArrow(canvas, link.from.position, link.to.position, link.id);
+      });
+    }
+
+    if (props.isLinking) {
+      if (props.linkStart && props.linkOffset) {
+        drawArrow(
+          canvas,
+          props.linkStart.position,
+          {
+            x: props.linkStart.position.x + props.linkOffset.x,
+            y: props.linkStart.position.y + props.linkOffset.y,
+          },
+          -1,
+        );
+      }
+    }
   };
 
   useEffect(() => {
     draw();
-  }, [props.circles, props.selectedCircle, props.draggingOffset]);
+  }, [
+    props.circles,
+    props.selectedCircles,
+    props.draggingOffset,
+    props.linkOffset,
+    props.selectedLinks,
+    props.links,
+  ]);
 
   useEffect(() => {
     const canvas = document.querySelector('canvas');

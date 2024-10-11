@@ -18,22 +18,36 @@ export interface Circle {
   position: Coordinate;
 }
 
+export interface Link {
+  id: number;
+  from: Circle;
+  to: Circle;
+}
+
 const FiniteAutomata: React.FC<FiniteAutomataProps> = (
   props: FiniteAutomataProps,
 ) => {
   const [showMenu, setShowMenu] = useState(false);
+  const [showSubMenuState, setShowSubMenuState] = useState(false);
   const [contextMenu, setContextMenu] = useState<Coordinate>({
     x: 0,
     y: 0,
   });
+
   const [circles, setCircles] = useState<Circle[]>([]);
   const [selectedCircle, setSelectedCircle] = useState<Circle[]>([]);
+
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [dragStartPosition, setDragStartPosition] = useState<Coordinate | null>(
     null,
   );
   const [dragOffset, setDragOffset] = useState<Coordinate | null>(null);
   const [isSelectingArea, setIsSelectingArea] = useState<boolean>(false);
+
+  const [links, setLinks] = useState<Link[]>([]);
+  const [isAddingLink, setIsAddingLink] = useState<boolean>(false);
+  const [linkStart, setLinkStart] = useState<Circle | null>(null);
+  const [linkOffset, setLinkOffset] = useState<Coordinate | null>(null);
 
   const handleContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -47,6 +61,9 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
   const handleClickOutside = () => {
     if (showMenu) {
       setShowMenu(false);
+    }
+    if (showSubMenuState) {
+      setShowSubMenuState(false);
     }
   };
 
@@ -89,18 +106,23 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
     });
   };
 
-  const handleAddCircle = (x: number, y: number) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const findNextId = (arr: any[]) => {
     let nextCircleId = 0;
-    if (circles.length > 0) {
-      nextCircleId =
-        circles[0].id !== 0 ? 0 : circles[circles.length - 1].id + 1;
-      for (let i = 0; i < circles.length - 1; i++) {
-        if (circles[i].id + 1 !== circles[i + 1].id) {
-          nextCircleId = circles[i].id + 1;
+    if (arr.length > 0) {
+      nextCircleId = arr[0].id !== 0 ? 0 : arr[arr.length - 1].id + 1;
+      for (let i = 0; i < arr.length - 1; i++) {
+        if (arr[i].id + 1 !== arr[i + 1].id) {
+          nextCircleId = arr[i].id + 1;
           break;
         }
       }
     }
+    return nextCircleId;
+  };
+
+  const handleAddCircle = (x: number, y: number) => {
+    const nextCircleId = findNextId(circles);
     setCircles((prevCircles) =>
       [
         ...prevCircles,
@@ -152,6 +174,15 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
 
   const handleClear = () => {
     setCircles([]);
+    setSelectedCircle([]);
+    setLinks([]);
+    setIsAddingLink(false);
+    setLinkStart(null);
+    setLinkOffset(null);
+    setIsDragging(false);
+    setDragStartPosition(null);
+    setDragOffset(null);
+    setIsSelectingArea(false);
   };
 
   const handleSelectArea = (x1: number, y1: number, x2: number, y2: number) => {
@@ -175,6 +206,17 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
   const handleMouseMove = (
     event: React.MouseEvent<HTMLCanvasElement, MouseEvent>,
   ) => {
+    if (isAddingLink && linkStart) {
+      if (!linkOffset) {
+        setLinkOffset({ x: 0, y: 0 });
+      } else {
+        // FIXME - Link offset is not working properly
+        const dx = linkOffset.x + event.clientX - linkStart?.position.x;
+        const dy = linkOffset.y + event.clientY - linkStart?.position.y;
+        setLinkOffset({ x: dx, y: dy });
+      }
+      return;
+    }
     if (!dragStartPosition) {
       return;
     }
@@ -208,6 +250,10 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
   const handleMouseUp = (
     event: React.MouseEvent<HTMLCanvasElement, MouseEvent>,
   ) => {
+    if (isAddingLink) {
+      handleAddLinkEnd();
+      return;
+    }
     setIsDragging(false);
     setDragStartPosition(null);
     setDragOffset(null);
@@ -218,6 +264,38 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
     OnMouseDown: handleMouseDown,
     OnMouseMove: handleMouseMove,
     OnMouseUp: handleMouseUp,
+  };
+
+  const handleAddLinkStart = () => {
+    if (selectedCircle.length !== 1) {
+      return;
+    }
+    setLinkStart(selectedCircle[0]);
+    setIsAddingLink(true);
+  };
+
+  const handleAddLinkEnd = () => {
+    if (selectedCircle.length !== 1) {
+      return;
+    }
+    const nextLinkId = findNextId(links);
+    if (linkStart) {
+      setLinks((prevLinks) => [
+        ...prevLinks,
+        {
+          id: nextLinkId,
+          from: linkStart,
+          to: selectedCircle[0],
+        },
+      ]);
+    }
+    setLinkStart(null);
+    setLinkOffset(null);
+    setIsAddingLink(false);
+  };
+
+  const handleRemoveLink = (id: number) => {
+    setLinks((prevLinks) => prevLinks.filter((link) => link.id !== id));
   };
 
   useEffect(() => {
@@ -242,11 +320,15 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
         theme={props.theme}
         circles={circles}
         circleRadius={CIRCLE_RADIUS}
-        selectedCircle={selectedCircle}
+        selectedCircles={selectedCircle}
         onCanvasDrag={onCanvasDrag}
         dragStartPosition={dragStartPosition || { x: 0, y: 0 }}
         draggingOffset={dragOffset || { x: 0, y: 0 }}
         isSelectingArea={isSelectingArea}
+        links={links}
+        isLinking={isAddingLink}
+        linkStart={linkStart}
+        linkOffset={linkOffset || { x: 0, y: 0 }}
       ></Canvas>
       {showMenu && (
         <Dropdown.Menu
@@ -259,19 +341,61 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
           }}
         >
           <Dropdown.Item
+            onMouseOver={() => setShowSubMenuState(false)}
             onClick={() => handleAddCircle(contextMenu.x, contextMenu.y)}
           >
-            Adicionar círculo
+            Adicionar estado
           </Dropdown.Item>
-          <Dropdown.Item>Adicionar link</Dropdown.Item>
           <Dropdown.Item
+            onMouseOver={() => setShowSubMenuState(false)}
+            onClick={handleAddLinkStart}
+          >
+            Adicionar transições
+          </Dropdown.Item>
+          <Dropdown.Item
+            onMouseOver={() => setShowSubMenuState(false)}
             onClick={() => handleRemoveCircle(contextMenu.x, contextMenu.y)}
           >
-            Remover elemento
+            Remover estado
           </Dropdown.Item>
-          <Dropdown.Item onClick={handleClear}>Limpar</Dropdown.Item>
+          <Dropdown.Item onMouseOver={() => setShowSubMenuState(true)}>
+            Remover transições
+          </Dropdown.Item>
+
+          <Dropdown.Item
+            onMouseOver={() => setShowSubMenuState(false)}
+            onClick={handleClear}
+          >
+            Limpar
+          </Dropdown.Item>
         </Dropdown.Menu>
       )}
+      {showSubMenuState &&
+        links.filter(
+          (link) =>
+            link.from === selectedCircle[0] || link.to === selectedCircle[0],
+        ).length > 0 && (
+          <Dropdown.Menu
+            show
+            style={{
+              position: 'absolute',
+              top: contextMenu.y + 100,
+              left: contextMenu.x + 175,
+              zIndex: 1000,
+            }}
+          >
+            {links
+              .filter(
+                (link) => selectedCircle[0] || link.to === selectedCircle[0],
+              )
+              .map((link) => (
+                <Dropdown.Item
+                  key={link.id}
+                  onClick={() => handleRemoveLink(link.id)}
+                >{`Q${link.from.id} -> Q${link.to.id}`}</Dropdown.Item>
+              ))}
+          </Dropdown.Menu>
+        )}
     </Container>
   );
 };
