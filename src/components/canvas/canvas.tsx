@@ -146,15 +146,22 @@ function Canvas(props: CanvasProps) {
     ctx.beginPath();
     ctx.moveTo(from.x, from.y);
     ctx.lineTo(to.x, to.y);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(to.x, to.y);
     ctx.lineTo(
       to.x - headlen * Math.cos(angle - Math.PI / 6),
       to.y - headlen * Math.sin(angle - Math.PI / 6),
     );
-    ctx.moveTo(to.x, to.y);
     ctx.lineTo(
       to.x - headlen * Math.cos(angle + Math.PI / 6),
       to.y - headlen * Math.sin(angle + Math.PI / 6),
     );
+    ctx.lineTo(to.x, to.y);
+    ctx.closePath();
+    ctx.fillStyle = ctx.strokeStyle;
+    ctx.fill();
 
     const isLinkSelected = props.selectedLinks
       ?.map((link) => link.id)
@@ -185,6 +192,7 @@ function Canvas(props: CanvasProps) {
     }
     if (props.circles) {
       props.circles.forEach((circle) => {
+        console.log('circle', circle.position);
         drawCircle(
           canvas,
           circle.position.x,
@@ -198,18 +206,37 @@ function Canvas(props: CanvasProps) {
 
     if (props.links) {
       props.links.forEach((link) => {
+        const leftOrRight = link.from.position.x < link.to.position.x ? 1 : -1;
+        if (leftOrRight === 1) {
+          link.from.position.x += props.circleRadius || 20;
+          link.to.position.x -= props.circleRadius || 20;
+        } else {
+          link.from.position.x -= props.circleRadius || 20;
+          link.to.position.x += props.circleRadius || 20;
+        }
         drawArrow(canvas, link.from.position, link.to.position, link.id);
       });
     }
 
     if (props.isLinking) {
       if (props.linkStart && props.linkOffset) {
+        const leftOrRight =
+          props.linkStart.position.x < props.linkOffset.x ? 1 : -1;
+        if (leftOrRight === 1) {
+          props.linkOffset.x -= (props.circleRadius || 20) / 2;
+        } else {
+          props.linkOffset.x += (props.circleRadius || 20) / 2;
+        }
         drawArrow(
           canvas,
           props.linkStart.position,
           {
             x: props.linkStart.position.x + props.linkOffset.x,
-            y: props.linkStart.position.y + props.linkOffset.y,
+            y:
+              props.linkStart.position.y +
+              props.linkOffset.y +
+              (props.circleRadius ?? 20) * 2 +
+              15,
           },
           -1,
         );
@@ -244,6 +271,7 @@ function Canvas(props: CanvasProps) {
         width: '100%',
         height: '100%',
         margin: 0,
+        padding: 0,
       }}
       onMouseDown={props.onCanvasDrag?.OnMouseDown}
       onMouseMove={props.onCanvasDrag?.OnMouseMove}

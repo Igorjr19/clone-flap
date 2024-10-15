@@ -29,6 +29,9 @@ export interface Link {
 const FiniteAutomata: React.FC<FiniteAutomataProps> = (
   props: FiniteAutomataProps,
 ) => {
+  const [canvasOffset, setCanvasOffset] = useState<Coordinate>({ x: 0, y: 0 });
+  const [canvasSize, setCanvasSize] = useState<Coordinate>({ x: 0, y: 0 });
+
   const [showMenu, setShowMenu] = useState(false);
   const [showSubMenuState, setShowSubMenuState] = useState(false);
   const [contextMenu, setContextMenu] = useState<Coordinate>({
@@ -236,9 +239,8 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
       if (!linkOffset) {
         setLinkOffset({ x: 0, y: 0 });
       } else {
-        // FIXME - Link offset is not working properly
-        const dx = linkOffset.x + event.clientX - linkStart?.position.x;
-        const dy = linkOffset.y + event.clientY - linkStart?.position.y;
+        const dx = event.clientX - linkStart.position.x;
+        const dy = event.clientY - linkStart.position.y;
         setLinkOffset({ x: dx, y: dy });
       }
       return;
@@ -331,6 +333,15 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
     };
   }, [showMenu]);
 
+  useEffect(() => {
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      const rect = canvas.getBoundingClientRect();
+      setCanvasOffset({ x: rect.left, y: rect.top });
+      setCanvasSize({ x: rect.width, y: rect.height });
+    }
+  }, []);
+
   const isContextMenuOptionDisabled = !(selectedCircle.length > 0);
 
   return (
@@ -339,24 +350,95 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
       className="d-flex justify-content-center align-items-center"
       style={{
         height: '85vh',
+        padding: 0,
+        margin: 0,
       }}
       onContextMenu={handleContextMenu}
     >
       <Canvas
-        width={1920}
-        height={1080}
+        width={Math.round(canvasSize.x)}
+        height={Math.round(canvasSize.y)}
         theme={props.theme}
-        circles={circles}
+        circles={circles.map((c) => {
+          return {
+            id: c.id,
+            position: {
+              x: c.position.x - canvasOffset.x,
+              y: c.position.y - canvasOffset.y,
+            },
+            isInitial: c.isInitial,
+            isFinal: c.isFinal,
+          };
+        })}
         circleRadius={CIRCLE_RADIUS}
-        selectedCircles={selectedCircle}
+        selectedCircles={selectedCircle.map((c) => {
+          return {
+            id: c.id,
+            isFinal: c.isFinal,
+            isInitial: c.isInitial,
+            position: {
+              x: c.position.x - canvasOffset.x,
+              y: c.position.y - canvasOffset.y,
+            },
+          };
+        })}
         onCanvasDrag={onCanvasDrag}
-        dragStartPosition={dragStartPosition || { x: 0, y: 0 }}
-        draggingOffset={dragOffset || { x: 0, y: 0 }}
+        dragStartPosition={
+          dragStartPosition
+            ? {
+                x: dragStartPosition.x - canvasOffset.x,
+                y: dragStartPosition.y - canvasOffset.y,
+              }
+            : { x: 0, y: 0 }
+        }
+        draggingOffset={
+          dragOffset
+            ? {
+                x: dragOffset.x,
+                y: dragOffset.y,
+              }
+            : { x: 0, y: 0 }
+        }
         isSelectingArea={isSelectingArea}
-        links={links}
+        links={links.map((link) => {
+          return {
+            id: link.id,
+            from: {
+              id: link.from.id,
+              position: {
+                x: link.from.position.x - canvasOffset.x,
+                y: link.from.position.y - canvasOffset.y,
+              },
+            },
+            to: {
+              id: link.to.id,
+              position: {
+                x: link.to.position.x - canvasOffset.x,
+                y: link.to.position.y - canvasOffset.y,
+              },
+            },
+          };
+        })}
         isLinking={isAddingLink}
-        linkStart={linkStart}
-        linkOffset={linkOffset || { x: 0, y: 0 }}
+        linkStart={
+          linkStart
+            ? {
+                id: linkStart.id,
+                position: {
+                  x: linkStart.position.x - canvasOffset.x,
+                  y: linkStart.position.y - canvasOffset.y,
+                },
+              }
+            : null
+        }
+        linkOffset={
+          linkOffset
+            ? {
+                x: linkOffset.x - canvasOffset.x,
+                y: linkOffset.y - canvasOffset.y,
+              }
+            : { x: 0, y: 0 }
+        }
       ></Canvas>
       {showMenu && (
         <Dropdown.Menu
