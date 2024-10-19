@@ -133,6 +133,7 @@ function Canvas(props: CanvasProps) {
     from: Coordinate,
     to: Coordinate,
     id: number,
+    label: string,
   ) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -173,6 +174,16 @@ function Canvas(props: CanvasProps) {
         ? 'black'
         : 'white';
     ctx.stroke();
+
+    ctx.fillStyle = props.theme === 'light' ? 'black' : 'white';
+    ctx.font = '20px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(
+      label,
+      from.x + (to.x - from.x) / 2,
+      from.y + (to.y - from.y) / 2 - 10,
+    );
   };
 
   const draw = () => {
@@ -192,7 +203,6 @@ function Canvas(props: CanvasProps) {
     }
     if (props.circles) {
       props.circles.forEach((circle) => {
-        console.log('circle', circle.position);
         drawCircle(
           canvas,
           circle.position.x,
@@ -214,7 +224,14 @@ function Canvas(props: CanvasProps) {
           link.from.position.x -= props.circleRadius || 20;
           link.to.position.x += props.circleRadius || 20;
         }
-        drawArrow(canvas, link.from.position, link.to.position, link.id);
+
+        drawArrow(
+          canvas,
+          link.from.position,
+          link.to.position,
+          link.id,
+          link.symbols?.join() || '',
+        );
       });
     }
 
@@ -239,6 +256,7 @@ function Canvas(props: CanvasProps) {
               15,
           },
           -1,
+          '',
         );
       }
     }

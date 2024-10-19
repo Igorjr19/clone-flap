@@ -24,6 +24,7 @@ export interface Link {
   id: number;
   from: Circle;
   to: Circle;
+  symbols: string[];
 }
 
 const FiniteAutomata: React.FC<FiniteAutomataProps> = (
@@ -53,6 +54,11 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
   const [isAddingLink, setIsAddingLink] = useState<boolean>(false);
   const [linkStart, setLinkStart] = useState<Circle | null>(null);
   const [linkOffset, setLinkOffset] = useState<Coordinate | null>(null);
+
+  const [showLabelInput, setShowLabelInput] = useState<boolean>(false);
+  const [showLabelInputPosition, setShowLabelInputPosition] =
+    useState<Coordinate | null>(null);
+  const [labelInputValue, setLabelInputValue] = useState<string>('');
 
   const handleContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -172,6 +178,14 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
 
   const handleRemoveCircle = (x: number, y: number) => {
     const circle = identifyCircle(x, y);
+    if (!circle) {
+      return;
+    }
+    links.forEach((link) => {
+      if (link.from === circle || link.to === circle) {
+        setLinks((prevLinks) => prevLinks.filter((l) => l.id !== link.id));
+      }
+    });
     setCircles((prevCircles) => {
       return prevCircles.filter((c) => c.id !== circle?.id);
     });
@@ -179,7 +193,6 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
 
   const handleInitialCircle = (x: number, y: number) => {
     const circle = identifyCircle(x, y);
-    console.log(circle);
 
     if (!circle) {
       return;
@@ -308,22 +321,49 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
     }
     const nextLinkId = findNextId(links);
     if (linkStart) {
-      setLinks((prevLinks) => [
-        ...prevLinks,
-        {
-          id: nextLinkId,
-          from: linkStart,
-          to: selectedCircle[0],
-        },
-      ]);
+      const existingLink = links.find(
+        (link) =>
+          link.from.id === linkStart.id && link.to.id === selectedCircle[0].id,
+      );
+
+      if (!existingLink) {
+        setLinks((prevLinks) => [
+          ...prevLinks,
+          {
+            id: nextLinkId,
+            from: linkStart,
+            to: selectedCircle[0],
+            symbols: [],
+          },
+        ]);
+      }
     }
     setLinkStart(null);
     setLinkOffset(null);
     setIsAddingLink(false);
+    setShowLabelInput(true);
   };
 
   const handleRemoveLink = (id: number) => {
+    setShowSubMenuState(false);
     setLinks((prevLinks) => prevLinks.filter((link) => link.id !== id));
+  };
+
+  const handleAddLabel = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      const newLinks = [...links];
+      if (newLinks.length === 0) {
+        return;
+      }
+      if (newLinks[newLinks.length - 1].symbols.length === 0) {
+        newLinks[newLinks.length - 1].symbols = [labelInputValue];
+      } else {
+        newLinks[newLinks.length - 1].symbols.push(labelInputValue);
+      }
+      setLinks(newLinks);
+      setShowLabelInput(false);
+      setLabelInputValue('');
+    }
   };
 
   useEffect(() => {
@@ -332,6 +372,21 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
       document.removeEventListener('click', handleClickOutside);
     };
   }, [showMenu]);
+
+  useEffect(() => {
+    if (links.length === 0) {
+      return;
+    }
+    if (showLabelInput && links[links.length - 1].from) {
+      const from = links[links.length - 1].from;
+      const to = links[links.length - 1].to;
+      const fromPosition = from.position;
+      const toPosition = to.position;
+      const x = (fromPosition.x + toPosition.x) / 2;
+      const y = (fromPosition.y + toPosition.y) / 2 - 40;
+      setShowLabelInputPosition({ x, y });
+    }
+  }, [dragOffset]);
 
   useEffect(() => {
     const canvas = document.querySelector('canvas');
@@ -403,6 +458,7 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
         links={links.map((link) => {
           return {
             id: link.id,
+            symbols: link.symbols,
             from: {
               id: link.from.id,
               position: {
@@ -473,6 +529,7 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
           <Dropdown.Item
             disabled={isContextMenuOptionDisabled}
             onMouseOver={() => setShowSubMenuState(true)}
+            onClick={() => setShowSubMenuState(false)}
           >
             Remover transições
           </Dropdown.Item>
@@ -515,7 +572,9 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
           >
             {links
               .filter(
-                (link) => selectedCircle[0] || link.to === selectedCircle[0],
+                (link) =>
+                  link.from === selectedCircle[0] ||
+                  link.to === selectedCircle[0],
               )
               .map((link) => (
                 <Dropdown.Item
@@ -525,6 +584,20 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
               ))}
           </Dropdown.Menu>
         )}
+      {showLabelInput && (
+        <input
+          style={{
+            position: 'absolute',
+            top: showLabelInputPosition?.y,
+            left: (showLabelInputPosition?.x || 0) - 50,
+            width: 100,
+          }}
+          type="text"
+          value={labelInputValue}
+          onChange={(e) => setLabelInputValue(e.target.value)}
+          onKeyDown={handleAddLabel}
+        />
+      )}
     </Container>
   );
 };
