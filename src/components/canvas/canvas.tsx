@@ -175,15 +175,14 @@ function Canvas(props: CanvasProps) {
         : 'white';
     ctx.stroke();
 
+    let labelPositionY = from.y + (to.y - from.y) / 2;
+    labelPositionY += from.x < to.x ? -20 : 20;
+
     ctx.fillStyle = props.theme === 'light' ? 'black' : 'white';
     ctx.font = '20px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(
-      label,
-      from.x + (to.x - from.x) / 2,
-      from.y + (to.y - from.y) / 2 - 10,
-    );
+    ctx.fillText(label, from.x + (to.x - from.x) / 2, labelPositionY);
   };
 
   const draw = () => {
