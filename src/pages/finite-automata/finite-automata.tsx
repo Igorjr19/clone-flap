@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Dropdown } from 'react-bootstrap';
+import { Container, Dropdown, Form, InputGroup } from 'react-bootstrap';
 import Canvas from '../../components/canvas/canvas';
 
 const CIRCLE_RADIUS = 20;
@@ -59,6 +59,11 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
   const [showLabelInputPosition, setShowLabelInputPosition] =
     useState<Coordinate | null>(null);
   const [labelInputValue, setLabelInputValue] = useState<string>('');
+
+  const [input, setInput] = useState<string>('');
+  const [result, setResult] = useState<boolean>(false);
+  const [empty, setEmpty] = useState<boolean>(true);
+  const [disabled, setDisabled] = useState<boolean>(false);
 
   const handleContextMenu = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -288,9 +293,7 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
     }
   };
 
-  const handleMouseUp = (
-    event: React.MouseEvent<HTMLCanvasElement, MouseEvent>,
-  ) => {
+  const handleMouseUp = () => {
     if (isAddingLink) {
       handleAddLinkEnd();
       return;
@@ -367,6 +370,10 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
   };
 
   useEffect(() => {
+    checkEnabled();
+  }, [circles, links]);
+
+  useEffect(() => {
     document.addEventListener('click', handleClickOutside);
     return () => {
       document.removeEventListener('click', handleClickOutside);
@@ -399,6 +406,56 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
 
   const isContextMenuOptionDisabled = !(selectedCircle.length > 0);
 
+  const checkEnabled = () => {
+    const initialState = circles.find((circle) => circle.isInitial);
+    const finalStates = circles.filter((circle) => circle.isFinal);
+    if (!initialState || finalStates.length === 0) {
+      setDisabled(true);
+      return;
+    }
+    setDisabled(false);
+  };
+
+  const finiteAutomataTest = (input: string) => {
+    const initialState = circles.find((circle) => circle.isInitial);
+    if (!initialState) {
+      return false;
+    }
+    const finalStates = circles.filter((circle) => circle.isFinal);
+    let currentState = initialState;
+    const linksMap = new Map<number, Link[]>();
+    links.forEach((link) => {
+      if (linksMap.has(link.from.id)) {
+        linksMap.get(link.from.id)?.push(link);
+      } else {
+        linksMap.set(link.from.id, [link]);
+      }
+    });
+    for (let i = 0; i < input.length; i++) {
+      const symbol = input[i];
+      const currentLinks = linksMap.get(currentState.id);
+      if (!currentLinks) {
+        return false;
+      }
+      const nextLink = currentLinks.find((link) =>
+        link.symbols.includes(symbol),
+      );
+      if (!nextLink) {
+        return false;
+      }
+      currentState = nextLink.to;
+    }
+    return finalStates.includes(currentState);
+  };
+
+  const onChangeInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+    setEmpty(e.target.value === '');
+    setResult(
+      e.target.value === '' ? false : finiteAutomataTest(e.target.value),
+    );
+  };
+
   return (
     <Container
       fluid
@@ -407,6 +464,8 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
         height: '85vh',
         padding: 0,
         margin: 0,
+        display: 'flex',
+        flexDirection: 'column',
       }}
       onContextMenu={handleContextMenu}
     >
@@ -496,6 +555,19 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
             : { x: 0, y: 0 }
         }
       ></Canvas>
+      <InputGroup className="mb-3">
+        <InputGroup.Text>Teste</InputGroup.Text>
+        <Form.Control
+          type="text"
+          placeholder="Vazio"
+          value={input}
+          onChange={onChangeInput}
+          disabled={disabled}
+          style={{
+            backgroundColor: empty ? '' : result ? 'green' : 'red',
+          }}
+        />
+      </InputGroup>
       {showMenu && (
         <Dropdown.Menu
           show
