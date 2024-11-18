@@ -2,6 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
 import { HashRouter, Route, Routes } from 'react-router-dom';
+import { useApp } from './app.hook';
 import Header from './components/header/header';
 import FiniteAutomata from './pages/finite-automata/finite-automata';
 import Home from './pages/home/home';
@@ -26,17 +27,52 @@ function App() {
     document.body.dataset.bsTheme = theme;
   }, [theme]);
 
+  const {
+    regex,
+    setRegex,
+    rules,
+    setRules,
+    circles,
+    setCircles,
+    links,
+    setLinks,
+  } = useApp();
+
   return (
     <HashRouter>
       <Header />
       <Container fluid className="min-100" data-bs-theme={theme}>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/regex" element={<Regex />} />
-          <Route path="/regular-grammar" element={<RegularGrammar />} />
+          <Route
+            path="/regex"
+            element={<Regex regex={regex} setRegex={setRegex} />}
+          />
+          <Route
+            path="/regular-grammar"
+            element={
+              <RegularGrammar
+                rules={rules}
+                setRules={setRules}
+                setCircles={setCircles}
+                setLinks={setLinks}
+                setRegex={setRegex}
+              />
+            }
+          />
           <Route
             path="/FiniteAutomata"
-            element={<FiniteAutomata theme={theme} />}
+            element={
+              <FiniteAutomata
+                theme={theme}
+                circles={circles}
+                setCircles={setCircles}
+                links={links}
+                setLinks={setLinks}
+                setRules={setRules}
+                setRegex={setRegex}
+              />
+            }
           />
         </Routes>
       </Container>

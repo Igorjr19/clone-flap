@@ -1,11 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Dropdown, Form, InputGroup } from 'react-bootstrap';
+import { Button, Container, Dropdown, Form, InputGroup } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import Canvas from '../../components/canvas/canvas';
+import { Rule } from '../regular-grammar/regular-grammar';
 
 const CIRCLE_RADIUS = 20;
 
 interface FiniteAutomataProps {
   theme: 'light' | 'dark';
+  circles: Circle[];
+  setCircles: React.Dispatch<React.SetStateAction<Circle[]>>;
+  links: Link[];
+  setLinks: React.Dispatch<React.SetStateAction<Link[]>>;
+  setRegex: React.Dispatch<React.SetStateAction<string>>;
+  setRules: React.Dispatch<React.SetStateAction<Rule[]>>;
 }
 
 export interface Coordinate {
@@ -27,9 +35,15 @@ export interface Link {
   symbols: string[];
 }
 
-const FiniteAutomata: React.FC<FiniteAutomataProps> = (
-  props: FiniteAutomataProps,
-) => {
+const FiniteAutomata: React.FC<FiniteAutomataProps> = ({
+  circles,
+  links,
+  setCircles,
+  setLinks,
+  setRegex,
+  setRules,
+  ...props
+}: FiniteAutomataProps) => {
   const [canvasOffset, setCanvasOffset] = useState<Coordinate>({ x: 0, y: 0 });
   const [canvasSize, setCanvasSize] = useState<Coordinate>({ x: 0, y: 0 });
 
@@ -40,7 +54,6 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
     y: 0,
   });
 
-  const [circles, setCircles] = useState<Circle[]>([]);
   const [selectedCircle, setSelectedCircle] = useState<Circle[]>([]);
 
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -50,7 +63,6 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
   const [dragOffset, setDragOffset] = useState<Coordinate | null>(null);
   const [isSelectingArea, setIsSelectingArea] = useState<boolean>(false);
 
-  const [links, setLinks] = useState<Link[]>([]);
   const [isAddingLink, setIsAddingLink] = useState<boolean>(false);
   const [linkStart, setLinkStart] = useState<Circle | null>(null);
   const [linkOffset, setLinkOffset] = useState<Coordinate | null>(null);
@@ -371,7 +383,7 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
 
   useEffect(() => {
     checkEnabled();
-  }, [circles, links]);
+  }, [circles, links, selectedCircle]);
 
   useEffect(() => {
     document.addEventListener('click', handleClickOutside);
@@ -454,6 +466,47 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
     setResult(
       e.target.value === '' ? false : finiteAutomataTest(e.target.value),
     );
+  };
+
+  const convertToRegularGrammar = () => {
+    const initialState = circles.find((circle) => circle.isInitial);
+    if (!initialState) {
+      return;
+    }
+    const finalStates = circles.filter((circle) => circle.isFinal);
+    const linksMap = new Map<number, Link[]>();
+    links.forEach((link) => {
+      if (linksMap.has(link.from.id)) {
+        linksMap.get(link.from.id)?.push(link);
+      } else {
+        linksMap.set(link.from.id, [link]);
+      }
+    });
+    const rules: Rule[] = [];
+    links.forEach((link) => {
+      link.symbols.forEach((symbol) => {
+        rules.push({
+          left: `Q${link.from.id}`,
+          right: symbol === '' ? [''] : [symbol],
+        });
+      });
+    });
+    finalStates.forEach((finalState) => {
+      if (finalState === initialState) {
+        rules.push({
+          left: `Q${finalState.id}`,
+          right: [''],
+        });
+      }
+    });
+    setRules(rules);
+  };
+
+  const navigate = useNavigate();
+
+  const handleConvert = () => {
+    convertToRegularGrammar();
+    navigate('/regular-grammar');
   };
 
   return (
@@ -568,6 +621,9 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = (
           }}
         />
       </InputGroup>
+      <Button onClick={handleConvert} disabled={disabled}>
+        Converter para gramática regular
+      </Button>
       {showMenu && (
         <Dropdown.Menu
           show

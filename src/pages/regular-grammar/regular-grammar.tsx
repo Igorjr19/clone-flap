@@ -6,15 +6,30 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useEffect, useState } from 'react';
 import { Accordion, Button, Container, Form } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { Circle, Link } from '../finite-automata/finite-automata';
 
-interface Rule {
+export interface Rule {
   left: string;
   right: string[];
 }
 
-function RegularGrammar() {
-  const startSymbol = 'S';
-  const [rules, setRules] = useState<Rule[]>([]);
+interface IRegularGrammar {
+  rules: Rule[];
+  setRules: React.Dispatch<React.SetStateAction<Rule[]>>;
+  setCircles: React.Dispatch<React.SetStateAction<Circle[]>>;
+  setLinks: React.Dispatch<React.SetStateAction<Link[]>>;
+  setRegex: React.Dispatch<React.SetStateAction<string>>;
+}
+
+function RegularGrammar({
+  rules,
+  setRules,
+  setCircles,
+  setLinks,
+  setRegex,
+}: IRegularGrammar) {
+  const startSymbol = rules[0]?.left || 'S';
   const [terminals, setTerminals] = useState<string[]>([]);
   const [test, setTest] = useState('');
   const [result, setResult] = useState(true);
@@ -255,6 +270,75 @@ function RegularGrammar() {
     return width + 45; // Add some padding
   };
 
+  const convertRulesToRegex = () => {
+    const regexParts: string[] = [];
+
+    const buildRegex = (
+      symbol: string,
+      visited: Set<string> = new Set(),
+    ): string => {
+      if (visited.has(symbol)) {
+        return '';
+      }
+      visited.add(symbol);
+
+      const matchingRules = rules.filter((rule) => rule.left === symbol);
+      const parts: string[] = [];
+
+      for (const rule of matchingRules) {
+        for (const production of rule.right) {
+          if (production === '') {
+            parts.push('');
+          } else if (production.length === 1) {
+            parts.push(production);
+          } else {
+            const terminalPart = production.slice(0, -1);
+            const nextNonTerminal = production.slice(-1);
+            parts.push(
+              `${terminalPart}${buildRegex(nextNonTerminal, new Set(visited))}`,
+            );
+          }
+        }
+      }
+
+      return parts.length > 1 ? `(${parts.join('|')})` : parts[0];
+    };
+
+    regexParts.push(buildRegex(startSymbol));
+
+    return regexParts.join('|');
+  };
+
+  const isValidRegex = (regex: string) => {
+    if (regex.includes('undefined')) {
+      return false;
+    }
+    try {
+      new RegExp(regex);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const navigate = useNavigate();
+
+  const handleConvertToRegex = () => {
+    const regex = convertRulesToRegex();
+
+    if (regex) {
+      if (!isValidRegex(regex)) {
+        // TODO - Alterar para um modal
+        alert(
+          'A gramática não pode ser convertida para uma expressão regular.',
+        );
+        return;
+      }
+      setRegex(regex);
+      navigate('/regex');
+    }
+  };
+
   return (
     <Container style={{ padding: '5vh 0' }} data-bs-theme={theme}>
       <h1>Gramática Regular</h1>
@@ -289,6 +373,9 @@ function RegularGrammar() {
         </Button>
         <Button variant="outline-success" onClick={handleExample}>
           Exemplo
+        </Button>
+        <Button variant="outline-info" onClick={handleConvertToRegex}>
+          Converter para RegEx
         </Button>
       </Container>
       {rules.map((rule, leftIndex) => (

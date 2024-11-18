@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Container, Form, InputGroup, Stack } from 'react-bootstrap';
 
-function Regex() {
-  const [regex, setRegex] = useState('');
+interface IRegex {
+  regex: string;
+  setRegex: React.Dispatch<React.SetStateAction<string>>;
+}
+
+function Regex({ regex, setRegex }: IRegex) {
   const [input1, setInput1] = useState('');
   const [input2, setInput2] = useState('');
   const [result1, setResult1] = useState(false);
@@ -45,6 +49,13 @@ function Regex() {
 
   const green = theme === 'light' ? 'lightgreen' : 'darkgreen';
   const red = theme === 'light' ? 'lightcoral' : 'darkred';
+
+  useEffect(() => {
+    setRegex(regex);
+    setResult1(checkRegex(regex, input1));
+    setResult2(checkRegex(regex, input2));
+    setEmpty(regex === '');
+  }, [regex, input1, input2]);
 
   return (
     <Container>
