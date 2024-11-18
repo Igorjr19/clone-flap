@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Container, Form, InputGroup, Stack } from 'react-bootstrap';
+import { Button, Container, Form, InputGroup, Stack } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { Rule } from '../regular-grammar/regular-grammar';
 
 interface IRegex {
   regex: string;
   setRegex: React.Dispatch<React.SetStateAction<string>>;
+  setRules: React.Dispatch<React.SetStateAction<Rule[]>>;
 }
 
-function Regex({ regex, setRegex }: IRegex) {
+function Regex({ regex, setRegex, setRules }: IRegex) {
   const [input1, setInput1] = useState('');
   const [input2, setInput2] = useState('');
   const [result1, setResult1] = useState(false);
@@ -57,6 +60,23 @@ function Regex({ regex, setRegex }: IRegex) {
     setEmpty(regex === '');
   }, [regex, input1, input2]);
 
+  const convertToRegularGrammar = (regex: string) => {
+    return [
+      {
+        left: 'S',
+        right: [''],
+      },
+    ];
+  };
+
+  const navigate = useNavigate();
+
+  const handleConvertToRegularGrammar = () => {
+    const rules = convertToRegularGrammar(regex);
+    setRules(rules);
+    navigate('/regular-grammar');
+  };
+
   return (
     <Container>
       <h1>Expressão Regular</h1>
@@ -100,6 +120,9 @@ function Regex({ regex, setRegex }: IRegex) {
             />
           </InputGroup>
         </div>
+        <Button onClick={handleConvertToRegularGrammar} disabled={regex === ''}>
+          Converter para Gramática Regular
+        </Button>
       </Stack>
     </Container>
   );

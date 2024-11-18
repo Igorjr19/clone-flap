@@ -46,7 +46,9 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route
             path="/regex"
-            element={<Regex regex={regex} setRegex={setRegex} />}
+            element={
+              <Regex regex={regex} setRegex={setRegex} setRules={setRules} />
+            }
           />
           <Route
             path="/regular-grammar"

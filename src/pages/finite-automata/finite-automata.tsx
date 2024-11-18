@@ -622,7 +622,7 @@ const FiniteAutomata: React.FC<FiniteAutomataProps> = ({
         />
       </InputGroup>
       <Button onClick={handleConvert} disabled={disabled}>
-        Converter para gramática regular
+        Converter para Gramática Regular
       </Button>
       {showMenu && (
         <Dropdown.Menu

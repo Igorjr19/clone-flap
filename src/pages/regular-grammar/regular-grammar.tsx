@@ -339,6 +339,62 @@ function RegularGrammar({
     }
   };
 
+  const convertRulesToFiniteAutomata = () => {
+    const states: Circle[] = [];
+    const links: Link[] = [];
+    const stateMap: { [key: string]: Circle } = {};
+    let nextStateId = 0;
+
+    const getState = (name: string): Circle => {
+      if (!stateMap[name]) {
+        const newState: Circle = {
+          id: nextStateId++,
+          position: { x: Math.random() * 500, y: Math.random() * 500 },
+          isInitial: name === 'S',
+          isFinal: false,
+        };
+        stateMap[name] = newState;
+        states.push(newState);
+      }
+      return stateMap[name];
+    };
+
+    rules.forEach((rule) => {
+      const fromState = getState(rule.left);
+      rule.right.forEach((production) => {
+        const symbol = production[0];
+        const toStateName = production.length > 1 ? production[1] : '';
+        const toState = toStateName ? getState(toStateName) : fromState;
+
+        if (!toStateName) {
+          fromState.isFinal = true;
+        }
+
+        const existingLink = links.find(
+          (link) => link.from.id === fromState.id && link.to.id === toState.id,
+        );
+
+        if (existingLink) {
+          existingLink.symbols.push(symbol);
+        } else {
+          links.push({
+            id: links.length,
+            from: fromState,
+            to: toState,
+            symbols: [symbol],
+          });
+        }
+      });
+    });
+    setCircles(states);
+    setLinks(links);
+  };
+
+  const handleConvertToFiniteAutomata = () => {
+    convertRulesToFiniteAutomata();
+    navigate('/FiniteAutomata');
+  };
+
   return (
     <Container style={{ padding: '5vh 0' }} data-bs-theme={theme}>
       <h1>Gramática Regular</h1>
@@ -374,8 +430,16 @@ function RegularGrammar({
         <Button variant="outline-success" onClick={handleExample}>
           Exemplo
         </Button>
-        <Button variant="outline-info" onClick={handleConvertToRegex}>
+      </Container>
+      <Container style={{ padding: '1vh 0', display: 'flex', gap: '1vw' }}>
+        <Button variant="outline-primary" onClick={handleConvertToRegex}>
           Converter para RegEx
+        </Button>
+        <Button
+          variant="outline-primary"
+          onClick={handleConvertToFiniteAutomata}
+        >
+          Converter para Autômato Finito
         </Button>
       </Container>
       {rules.map((rule, leftIndex) => (
